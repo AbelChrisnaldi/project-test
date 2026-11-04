@@ -1,4 +1,4 @@
-﻿import io, re, zipfile
+import io, re, zipfile
 import xml.etree.ElementTree as ET
 from xml.sax.saxutils import escape as xml_escape
 

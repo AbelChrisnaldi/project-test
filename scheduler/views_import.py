@@ -1,4 +1,4 @@
-﻿import os
+import os
 import re
 from django.shortcuts import render, redirect
 from django.contrib import messages

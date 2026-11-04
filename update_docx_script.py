@@ -1,4 +1,4 @@
-﻿import zipfile, os, shutil
+import zipfile, os, shutil
 
 input_docx = "Algoritma_Genetika_Langkah_dan_Contoh_Perhitungan.docx"
 backup_docx = "Algoritma_Genetika_Langkah_dan_Contoh_Perhitungan_Original.docx"
