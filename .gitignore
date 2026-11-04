@@ -22,3 +22,4 @@ env/
 # File temporary Word / Excel
 ~$*.docx
 ~$*.xlsx
+.env
