@@ -1,0 +1,24 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+
+# Virtual Environment (JANGAN DI-PUSH)
+.venv/
+venv/
+ENV/
+env/
+
+# Database SQLite & Backup lokal (KARENA SUDAH 100% MYSQL)
+*.sqlite3
+*.sqlite3.backup
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# File temporary Word / Excel
+~$*.docx
+~$*.xlsx

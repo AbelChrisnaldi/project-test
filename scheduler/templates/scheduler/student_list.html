@@ -1,0 +1,217 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Data Mahasiswa & Plotting Dosen{% endblock %}
+{% block header_title %}Data Mahasiswa & Pembagian Dosen Sidang{% endblock %}
+
+{% block content %}
+<!-- Search & Filter Card -->
+<div class="card mb-4">
+  <div class="card-body p-3">
+    <form method="GET" class="row g-2 align-items-center">
+      <div class="col-md-3">
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" class="form-control" placeholder="Cari NIM, Nama, Dosen..." value="{{ query }}">
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <select name="status" class="form-select" onchange="this.form.submit()">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Semua Status ({{ total_count }})</option>
+          <option value="scheduled" {% if status_filter == 'scheduled' %}selected{% endif %}>Sudah Terjadwal ({{ scheduled_count }})</option>
+          <option value="unscheduled" {% if status_filter == 'unscheduled' %}selected{% endif %}>Belum Terjadwal / Kosong ({{ unscheduled_count }})</option>
+          <option value="locked" {% if status_filter == 'locked' %}selected{% endif %}>Terkunci Manual</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <select name="prodi" class="form-select" onchange="this.form.submit()">
+          <option value="all">Semua Program Studi</option>
+          {% for p in all_prodis %}
+            <option value="{{ p }}" {% if prodi_filter == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <select name="limit" class="form-select" onchange="this.form.submit()" title="Batas jumlah data per halaman">
+          <option value="50" {% if limit == '50' %}selected{% endif %}>Tampilkan 50 Data</option>
+          <option value="75" {% if limit == '75' %}selected{% endif %}>Tampilkan 75 Data</option>
+          <option value="100" {% if limit == '100' %}selected{% endif %}>Tampilkan 100 Data</option>
+          <option value="all" {% if limit == 'all' %}selected{% endif %}>Tampilkan Semua</option>
+        </select>
+      </div>
+
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-funnel me-1"></i> Filter</button>
+        {% if query or status_filter != 'all' or prodi_filter != 'all' or limit != '50' %}
+          <a href="{% url 'scheduler:student_list' %}" class="btn btn-outline-secondary" title="Reset filter"><i class="bi bi-x-circle"></i></a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Table Card -->
+<div class="card">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <div>
+      <span class="fw-bold">Daftar Mahasiswa Siap Sidang</span>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'scheduler:manual_grid' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-grid-3x3 me-1"></i> Editor Matriks Manual
+      </a>
+      <a href="{% url 'scheduler:genetic' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-cpu me-1"></i> Jadwalkan Otomatis (GA)
+      </a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th>No</th>
+          <th>NIM & Nama</th>
+          <th>Program Studi</th>
+          <th>Pembimbing</th>
+          <th>Penguji</th>
+          <th>Alokasi Jadwal</th>
+          <th>Status Kunci</th>
+          <th class="text-end">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+          <tr>
+            <td class="text-muted">
+              {% if is_paginated %}
+                {{ forloop.counter0|add:page_obj.start_index }}
+              {% else %}
+                {{ forloop.counter }}
+              {% endif %}
+            </td>
+            <td>
+              <div class="fw-bold text-dark">{{ s.nim }}</div>
+              <div class="text-secondary">{{ s.nama }}</div>
+            </td>
+            <td>
+              <span class="text-secondary">{{ s.prodi }}</span>
+              {% if s.kelompok_keahlian %}
+                <div class="text-muted small" style="font-size: 0.72rem;">{{ s.kelompok_keahlian }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <div><span class="badge badge-soft-primary">P1: {{ s.pembimbing_1|default:"-" }}</span></div>
+              {% if s.pembimbing_2 %}
+                <div class="mt-1"><span class="badge badge-soft-primary">P2: {{ s.pembimbing_2 }}</span></div>
+              {% endif %}
+            </td>
+            <td>
+              <div><span class="badge badge-soft-warning">U1: {{ s.penguji_1|default:"-" }}</span></div>
+              {% if s.penguji_2 %}
+                <div class="mt-1"><span class="badge badge-soft-warning">U2: {{ s.penguji_2 }}</span></div>
+              {% endif %}
+            </td>
+            <td>
+              {% if s.is_scheduled %}
+                <div><strong class="text-primary">{{ s.get_day_display_name }}</strong></div>
+                <div class="text-dark small"><i class="bi bi-clock me-1"></i>{{ s.get_time_display_name }}</div>
+                <div class="text-secondary small"><i class="bi bi-door-open me-1"></i>{{ s.get_room_display_name }}</div>
+                {% if s.is_manual %}
+                  <span class="badge bg-info text-dark" style="font-size: 0.65rem;">Manual</span>
+                {% endif %}
+              {% else %}
+                <span class="badge badge-soft-danger px-2 py-1">
+                  <i class="bi bi-dash-circle me-1"></i> Kosong / Belum Terjadwal
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              {% if s.is_locked %}
+                <span class="badge bg-warning text-dark"><i class="bi bi-lock-fill me-1"></i> Terkunci</span>
+              {% else %}
+                <span class="badge bg-light text-muted border"><i class="bi bi-unlock me-1"></i> Bebas (GA)</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'scheduler:student_edit' s.id %}" class="btn btn-outline-primary" title="Ubah Info / Jadwal Manual">
+                  <i class="bi bi-pencil-square"></i>
+                </a>
+                <a href="{% url 'scheduler:student_toggle_lock' s.id %}" class="btn btn-outline-warning" title="{% if s.is_locked %}Buka Kunci{% else %}Kunci Jadwal{% endif %}">
+                  <i class="bi bi-{% if s.is_locked %}unlock{% else %}lock{% endif %}"></i>
+                </a>
+                {% if s.is_scheduled %}
+                  <a href="{% url 'scheduler:student_clear_slot' s.id %}" class="btn btn-outline-secondary" title="Kosongkan Slot Jadwal" onclick="return confirm('Kosongkan slot mahasiswa {{ s.nim }}?')">
+                    <i class="bi bi-dash-circle"></i>
+                  </a>
+                {% endif %}
+                <a href="{% url 'scheduler:student_delete' s.id %}" class="btn btn-outline-danger" title="Hapus Mahasiswa Permanen" onclick="return confirm('Apakah Anda yakin ingin menghapus data mahasiswa {{ s.nim }} ({{ s.nama }}) secara permanen?')">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8" class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+              Tidak ada data mahasiswa ditemukan.
+              <div class="mt-2">
+                <a href="{% url 'scheduler:import_excel' %}" class="btn btn-primary btn-sm">Impor Berkas Excel</a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj and page_obj.has_other_pages %}
+  <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center py-2 px-3 gap-2">
+    <div class="small text-muted">
+      Menampilkan baris <strong>{{ page_obj.start_index }}</strong> s.d. <strong>{{ page_obj.end_index }}</strong> dari <strong>{{ filtered_count }}</strong> mahasiswa (Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }})
+    </div>
+    <nav aria-label="Navigasi Halaman Mahasiswa">
+      <ul class="pagination pagination-sm mb-0">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1&limit={{ limit }}&status={{ status_filter }}&prodi={{ prodi_filter }}&q={{ query }}" title="Halaman Pertama">&laquo;&laquo;</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&limit={{ limit }}&status={{ status_filter }}&prodi={{ prodi_filter }}&q={{ query }}">Sebelumnya</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&laquo;&laquo;</span></li>
+          <li class="page-item disabled"><span class="page-link">Sebelumnya</span></li>
+        {% endif %}
+
+        {% for p in page_obj.paginator.page_range %}
+          {% if p == page_obj.number %}
+            <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+          {% elif p >= page_obj.number|add:"-2" and p <= page_obj.number|add:"2" %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ p }}&limit={{ limit }}&status={{ status_filter }}&prodi={{ prodi_filter }}&q={{ query }}">{{ p }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&limit={{ limit }}&status={{ status_filter }}&prodi={{ prodi_filter }}&q={{ query }}">Berikutnya</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&limit={{ limit }}&status={{ status_filter }}&prodi={{ prodi_filter }}&q={{ query }}" title="Halaman Terakhir">&raquo;&raquo;</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Berikutnya</span></li>
+          <li class="page-item disabled"><span class="page-link">&raquo;&raquo;</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

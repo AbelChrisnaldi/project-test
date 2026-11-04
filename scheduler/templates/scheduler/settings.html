@@ -1,0 +1,193 @@
+﻿{% extends 'scheduler/base.html' %}
+
+{% block title %}Pengaturan Batasan Slot & Hari Sidang{% endblock %}
+{% block header_title %}Pengaturan Batasan Slot & Parameter Jadwal{% endblock %}
+
+{% block content %}
+<form method="POST">
+  {% csrf_token %}
+  <div class="row g-4">
+    <!-- Main Constraints Column -->
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header bg-white">
+          <h6 class="mb-0 fw-bold"><i class="bi bi-sliders text-primary me-2"></i>Batasan Variabel Penjadwalan (Input Manual Admin)</h6>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Nama Sesi / Periode Sidang</label>
+              <input type="text" name="name" class="form-control" value="{{ session.name }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Jumlah Hari Dialokasikan (Manual)</label>
+              <div class="input-group">
+                <input type="number" id="id_total_days" name="total_days" class="form-control" value="{{ session.total_days }}" min="1" max="30" required oninput="calcCapacity()">
+                <span class="input-group-text">Hari</span>
+              </div>
+              <div class="form-text">Contoh: 8 hari operasional sidang.</div>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label fw-bold small">Jam Mulai Operasional</label>
+              <input type="text" name="start_time" class="form-control" value="{{ session.start_time }}" placeholder="08:00">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold small">Jam Selesai Operasional</label>
+              <input type="text" name="end_time" class="form-control" value="{{ session.end_time }}" placeholder="16:30">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold small">Jumlah Slot Ruangan Tersedia</label>
+              <div class="input-group">
+                <input type="number" id="id_total_rooms" name="total_rooms" class="form-control" value="{{ session.total_rooms }}" min="1" max="25" required oninput="calcCapacity()">
+                <span class="input-group-text">Ruang</span>
+              </div>
+              <div class="form-text">Diproses secara numerik/anonim (Ruang 1 s.d. N).</div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="mb-3">
+            <label class="form-label fw-bold small">Daftar Slot Sesi Waktu per Hari (1 baris = 1 sesi sidang)</label>
+            <textarea id="id_slot_times" name="slot_times_text" rows="5" class="form-control font-monospace small" required oninput="calcCapacity()">{{ slot_times_text }}</textarea>
+            <div class="form-text">
+              Standar 90 menit per sidang. Tentukan rentang sesi per hari. Jumlah baris menentukan total sesi per hari (saat ini: <span id="span_sessions">{{ slot_times|length }}</span> sesi/hari).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Human Labeling Mapping (Senin-Jumat, Ruang Fisik) -->
+      <div class="card mb-4">
+        <div class="card-header bg-white">
+          <h6 class="mb-0 fw-bold"><i class="bi bi-tags text-success me-2"></i>Labeling Hari Nyata & Kode Ruangan Fisik (Untuk Ekspor)</h6>
+        </div>
+        <div class="card-body p-4">
+          <p class="text-muted small">
+            Algoritma GA memproses secara anonim/numerik (Hari 1..N, Ruang 1..N). Label di bawah ini digunakan saat ekspor output ke Excel untuk penamaan hari (Senin-Jumat) dan kode fisik ruangan (misalnya KTT2.06).
+          </p>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Penamaan Hari (1 per baris untuk Hari Ke-1 dst)</label>
+              <textarea name="day_labels_text" rows="8" class="form-control small">{{ day_labels_text }}</textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Kode Fisik Ruangan (1 per baris untuk Ruang 1 dst)</label>
+              <textarea name="room_labels_text" rows="8" class="form-control small">{{ room_labels_text }}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Genetic Algorithm Parameters -->
+      <div class="card mb-4">
+        <div class="card-header bg-white">
+          <h6 class="mb-0 fw-bold"><i class="bi bi-cpu text-warning me-2"></i>Parameter Algoritma Genetika (GA)</h6>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Ukuran Populasi</label>
+              <input type="number" name="population_size" class="form-control form-control-sm" value="{{ session.population_size }}" min="10" max="200">
+              <div class="form-text small">Default: 40 - 60</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Maksimum Generasi</label>
+              <input type="number" name="max_generations" class="form-control form-control-sm" value="{{ session.max_generations }}" min="10" max="500">
+              <div class="form-text small">Default: 80 - 150</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Probabilitas Crossover</label>
+              <input type="number" step="0.05" name="crossover_rate" class="form-control form-control-sm" value="{{ session.crossover_rate }}" min="0.1" max="1.0">
+              <div class="form-text small">Default: 0.80</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Probabilitas Mutasi</label>
+              <input type="number" step="0.05" name="mutation_rate" class="form-control form-control-sm" value="{{ session.mutation_rate }}" min="0.05" max="1.0">
+              <div class="form-text small">Default: 0.30</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary px-4">
+          <i class="bi bi-check2-circle me-1"></i> Simpan Pengaturan
+        </button>
+        <a href="{% url 'scheduler:dashboard' %}" class="btn btn-outline-secondary">Batal</a>
+      </div>
+    </div>
+
+    <!-- Live Capacity Calculation Column -->
+    <div class="col-lg-4">
+      <div class="card border-primary position-sticky" style="top: 80px;">
+        <div class="card-header bg-primary text-white">
+          <h6 class="mb-0 fw-bold"><i class="bi bi-calculator me-2"></i>Kalkulator Kapasitas Slot</h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-secondary small">Total Mahasiswa Terdaftar:</span>
+            <span class="fw-bold">{{ student_count }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-secondary small">Formula Kapasitas:</span>
+            <span class="small font-monospace">Hari &times; Sesi &times; Ruang</span>
+          </div>
+
+          <hr>
+
+          <div class="bg-light p-3 rounded text-center mb-3">
+            <div class="text-muted small">Total Slot Tersedia:</div>
+            <h2 class="fw-bold text-primary mb-0" id="calc_total_slots">{{ total_capacity }}</h2>
+            <small class="text-muted" id="calc_breakdown">
+              {{ session.total_days }} Hari &times; {{ session.slots_per_day }} Sesi &times; {{ session.total_rooms }} Ruang
+            </small>
+          </div>
+
+          <div id="calc_status_box">
+            {% if capacity_sufficient %}
+              <div class="alert alert-success small mb-0">
+                <i class="bi bi-check-circle-fill me-1"></i> <strong>Kapasitas Cukup!</strong>
+                <div>Tersedia kelebihan {{ capacity_diff }} slot cadangan. Penjadwalan dapat berjalan lancar.</div>
+              </div>
+            {% else %}
+              <div class="alert alert-danger small mb-0">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Kapasitas Kurang!</strong>
+                <div>Kekurangan {{ capacity_diff|stringformat:"d"|slice:"1:" }} slot untuk seluruh mahasiswa. Harap tambah hari atau ruangan.</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function calcCapacity() {
+    const days = parseInt(document.getElementById('id_total_days').value) || 0;
+    const rooms = parseInt(document.getElementById('id_total_rooms').value) || 0;
+    const lines = document.getElementById('id_slot_times').value.split('\n').filter(l => l.trim().length > 0);
+    const sessions = lines.length;
+    
+    document.getElementById('span_sessions').textContent = sessions;
+    const total = days * sessions * rooms;
+    document.getElementById('calc_total_slots').textContent = total;
+    document.getElementById('calc_breakdown').textContent = `${days} Hari × ${sessions} Sesi × ${rooms} Ruang`;
+
+    const students = {{ student_count }};
+    const box = document.getElementById('calc_status_box');
+    if (total >= students) {
+      box.innerHTML = `<div class="alert alert-success small mb-0"><i class="bi bi-check-circle-fill me-1"></i> <strong>Kapasitas Cukup!</strong><div>Tersedia kelebihan ${total - students} slot cadangan.</div></div>`;
+    } else {
+      box.innerHTML = `<div class="alert alert-danger small mb-0"><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Kapasitas Kurang!</strong><div>Kekurangan ${students - total} slot. Harap tambah hari atau ruangan.</div></div>`;
+    }
+  }
+</script>
+{% endblock %}

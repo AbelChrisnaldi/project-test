@@ -1,0 +1,255 @@
+﻿{% extends 'scheduler/base.html' %}
+
+{% block title %}Dashboard Penjadwalan Tugas Akhir{% endblock %}
+{% block header_title %}Ringkasan Penjadwalan Tugas Akhir{% endblock %}
+
+{% block content %}
+<!-- Top Metrics Row -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-secondary small fw-medium">Total Mahasiswa</span>
+          <h3 class="fw-bold mb-0 text-dark">{{ total_students }}</h3>
+          <small class="text-muted">Siap Dijadwalkan</small>
+        </div>
+        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
+          <i class="bi bi-mortarboard-fill fs-3"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-secondary small fw-medium">Status Terjadwal</span>
+          <h3 class="fw-bold mb-0 text-success">{{ scheduled_count }}</h3>
+          <small class="text-muted">Kosong: <span class="fw-bold text-danger">{{ unscheduled_count }}</span></small>
+        </div>
+        <div class="bg-success bg-opacity-10 text-success rounded-circle p-3">
+          <i class="bi bi-calendar-check-fill fs-3"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-secondary small fw-medium">Kapasitas Slot</span>
+          <h3 class="fw-bold mb-0 text-primary">{{ total_capacity }}</h3>
+          <small class="text-muted">{{ session.total_days }} Hari &times; {{ session.slots_per_day }} Sesi &times; {{ session.total_rooms }} Ruang</small>
+        </div>
+        <div class="bg-info bg-opacity-10 text-info rounded-circle p-3">
+          <i class="bi bi-door-open-fill fs-3"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-secondary small fw-medium">Status Bentrok</span>
+          <h3 class="fw-bold mb-0 {% if conflict_data.total_conflicts == 0 %}text-success{% else %}text-danger{% endif %}">
+            {{ conflict_data.total_conflicts }}
+          </h3>
+          <small class="text-muted">
+            {% if conflict_data.total_conflicts == 0 %}
+              <i class="bi bi-shield-check text-success"></i> Bebas Bentrok
+            {% else %}
+              <i class="bi bi-exclamation-triangle text-danger"></i> Dosen/Ruang Bentrok
+            {% endif %}
+          </small>
+        </div>
+        <div class="{% if conflict_data.total_conflicts == 0 %}bg-success bg-opacity-10 text-success{% else %}bg-danger bg-opacity-10 text-danger{% endif %} rounded-circle p-3">
+          <i class="bi bi-diagram-3-fill fs-3"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Workflow Stepper Guide -->
+<div class="card mb-4 shadow-sm border-0">
+  <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-2">
+      <div class="bg-light text-dark rounded-circle p-2 d-flex align-items-center justify-content-center border" style="width: 34px; height: 34px;">
+        <i class="bi bi-diagram-3-fill text-dark"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold text-dark" style="color: #000000 !important;">Alur Kerja Sistem Penjadwalan Sidang TA</h6>
+        <small class="text-dark" style="color: #000000 !important;">Ikuti 5 langkah berurutan di bawah ini untuk menghasilkan jadwal sidang yang optimal</small>
+      </div>
+    </div>
+  </div>
+  <div class="card-body p-4 bg-light bg-opacity-50">
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-3">
+      
+      <!-- Langkah 1 -->
+      <div class="col">
+        <div class="card h-100 border text-center p-3 d-flex flex-column justify-content-between bg-white shadow-sm hover-shadow">
+          <div>
+            <div class="d-inline-flex align-items-center justify-content-center bg-light text-dark rounded-circle mb-2 border" style="width: 48px; height: 48px;">
+              <i class="bi bi-file-earmark-excel fs-4 text-dark"></i>
+            </div>
+            <div>
+              <span class="badge bg-light text-dark border border-dark border-opacity-25 rounded-pill px-3 py-1 mb-2 fw-semibold" style="font-size: 0.72rem; color: #000000 !important;">Langkah 1</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1 fs-6" style="color: #000000 !important;">Import Data Master</h6>
+            <p class="small text-dark mb-3" style="font-size: 0.8rem; min-height: 48px; color: #000000 !important;">
+              Unggah berkas Excel rekapitulasi data mahasiswa & dosen sidang.
+            </p>
+          </div>
+          <a href="{% url 'scheduler:import_excel' %}" class="btn btn-outline-dark btn-sm w-100 fw-medium">
+            <i class="bi bi-upload me-1"></i> Impor Excel
+          </a>
+        </div>
+      </div>
+
+      <!-- Langkah 2 -->
+      <div class="col">
+        <div class="card h-100 border text-center p-3 d-flex flex-column justify-content-between bg-white shadow-sm hover-shadow">
+          <div>
+            <div class="d-inline-flex align-items-center justify-content-center bg-light text-dark rounded-circle mb-2 border" style="width: 48px; height: 48px;">
+              <i class="bi bi-sliders fs-4 text-dark"></i>
+            </div>
+            <div>
+              <span class="badge bg-light text-dark border border-dark border-opacity-25 rounded-pill px-3 py-1 mb-2 fw-semibold" style="font-size: 0.72rem; color: #000000 !important;">Langkah 2</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1 fs-6" style="color: #000000 !important;">Batasan Slot & Hari</h6>
+            <p class="small text-dark mb-3" style="font-size: 0.8rem; min-height: 48px; color: #000000 !important;">
+              Tentukan alokasi jumlah hari, jam operasional, dan slot ruangan.
+            </p>
+          </div>
+          <a href="{% url 'scheduler:settings' %}" class="btn btn-outline-dark btn-sm w-100 fw-medium">
+            <i class="bi bi-gear me-1"></i> Atur Slot
+          </a>
+        </div>
+      </div>
+
+      <!-- Langkah 3 -->
+      <div class="col">
+        <div class="card h-100 border text-center p-3 d-flex flex-column justify-content-between bg-white shadow-sm hover-shadow">
+          <div>
+            <div class="d-inline-flex align-items-center justify-content-center bg-light text-dark rounded-circle mb-2 border" style="width: 48px; height: 48px;">
+              <i class="bi bi-cpu fs-4 text-dark"></i>
+            </div>
+            <div>
+              <span class="badge bg-light text-dark border border-dark border-opacity-25 rounded-pill px-3 py-1 mb-2 fw-semibold" style="font-size: 0.72rem; color: #000000 !important;">Langkah 3</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1 fs-6" style="color: #000000 !important;">Eksekusi GA Python</h6>
+            <p class="small text-dark mb-3" style="font-size: 0.8rem; min-height: 48px; color: #000000 !important;">
+              Jalankan algoritma genetika untuk pencarian jadwal otomatis bebas bentrok.
+            </p>
+          </div>
+          <a href="{% url 'scheduler:genetic' %}" class="btn btn-outline-dark btn-sm w-100 fw-medium">
+            <i class="bi bi-play-fill me-1"></i> Eksekusi GA
+          </a>
+        </div>
+      </div>
+
+      <!-- Langkah 4 -->
+      <div class="col">
+        <div class="card h-100 border text-center p-3 d-flex flex-column justify-content-between bg-white shadow-sm hover-shadow">
+          <div>
+            <div class="d-inline-flex align-items-center justify-content-center bg-light text-dark rounded-circle mb-2 border" style="width: 48px; height: 48px;">
+              <i class="bi bi-grid-3x3-gap fs-4 text-dark"></i>
+            </div>
+            <div>
+              <span class="badge bg-light text-dark border border-dark border-opacity-25 rounded-pill px-3 py-1 mb-2 fw-semibold" style="font-size: 0.72rem; color: #000000 !important;">Langkah 4</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1 fs-6" style="color: #000000 !important;">Penjadwalan Manual</h6>
+            <p class="small text-dark mb-3" style="font-size: 0.8rem; min-height: 48px; color: #000000 !important;">
+              Sesuaikan posisi hari & ruang secara visual atau kunci jadwal tertentu.
+            </p>
+          </div>
+          <a href="{% url 'scheduler:manual_grid' %}" class="btn btn-outline-dark btn-sm w-100 fw-medium">
+            <i class="bi bi-calendar-event me-1"></i> Editor Matriks
+          </a>
+        </div>
+      </div>
+
+      <!-- Langkah 5 -->
+      <div class="col">
+        <div class="card h-100 border text-center p-3 d-flex flex-column justify-content-between bg-white shadow-sm hover-shadow">
+          <div>
+            <div class="d-inline-flex align-items-center justify-content-center bg-light text-dark rounded-circle mb-2 border" style="width: 48px; height: 48px;">
+              <i class="bi bi-file-earmark-arrow-down fs-4 text-dark"></i>
+            </div>
+            <div>
+              <span class="badge bg-light text-dark border border-dark border-opacity-25 rounded-pill px-3 py-1 mb-2 fw-semibold" style="font-size: 0.72rem; color: #000000 !important;">Langkah 5</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1 fs-6" style="color: #000000 !important;">Export Excel</h6>
+            <p class="small text-dark mb-3" style="font-size: 0.8rem; min-height: 48px; color: #000000 !important;">
+              Unduh jadwal sidang final dalam format Excel resmi siap disebarkan.
+            </p>
+          </div>
+          <a href="{% url 'scheduler:export_view' %}" class="btn btn-outline-dark btn-sm w-100 fw-medium">
+            <i class="bi bi-download me-1"></i> Ekspor File
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Details Row -->
+<div class="row g-4">
+  <!-- Conflict Alert Card (if any) -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-exclamation-octagon me-2 text-danger"></i>Pemeriksaan Bentrok Terkini</span>
+        <span class="badge {% if conflict_data.total_conflicts == 0 %}bg-success{% else %}bg-danger{% endif %}">
+          {{ conflict_data.total_conflicts }} Masalah
+        </span>
+      </div>
+      <div class="card-body">
+        {% if conflict_data.total_conflicts == 0 %}
+          <div class="text-center py-4">
+            <i class="bi bi-shield-fill-check text-success display-4"></i>
+            <h5 class="mt-3 fw-bold text-success">Jadwal Sempurna! Bebas Bentrok</h5>
+            <p class="text-muted small mb-3">
+              Tidak ada bentrok ruangan ganda maupun bentrok dosen pembimbing/penguji yang bertabrakan di waktu yang sama.
+            </p>
+            <a href="{% url 'scheduler:export_view' %}" class="btn btn-success btn-sm">
+              <i class="bi bi-download me-1"></i> Siap Diekspor ke Excel
+            </a>
+          </div>
+        {% else %}
+          <div class="alert alert-danger p-2 mb-3">
+            <small><strong>Peringatan!</strong> Ditemukan {{ conflict_data.total_conflicts }} bentrok jadwal.</small>
+          </div>
+          <ul class="list-group list-group-flush small">
+            {% for c in conflict_data.lecturer_conflicts|slice:":5" %}
+              <li class="list-group-item px-0 text-danger">
+                <i class="bi bi-person-x-fill me-1"></i> {{ c.message }}
+              </li>
+            {% endfor %}
+            {% for c in conflict_data.room_conflicts|slice:":5" %}
+              <li class="list-group-item px-0 text-danger">
+                <i class="bi bi-door-closed-fill me-1"></i> {{ c.message }}
+              </li>
+            {% endfor %}
+          </ul>
+          <div class="mt-3 d-flex gap-2">
+            <a href="{% url 'scheduler:genetic' %}" class="btn btn-primary btn-sm flex-fill">
+              <i class="bi bi-magic me-1"></i> Selesaikan dengan Algoritma Genetika
+            </a>
+            <a href="{% url 'scheduler:manual_grid' %}" class="btn btn-outline-secondary btn-sm flex-fill">
+              <i class="bi bi-pencil-square me-1"></i> Perbaiki Manual
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

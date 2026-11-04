@@ -1,0 +1,100 @@
+﻿================================================================================
+     PANDUAN LENGKAP SISTEM PENJADWALAN TUGAS AKHIR (ALGORITMA GENETIKA)
+                    PROGRAM STUDI S1 SISTEM INFORMASI
+================================================================================
+
+Folder Project : C:\laravel\Django\Tugasakhir
+Framework      : Django 6.1.1 (Python 3.13 Virtual Environment)
+Database       : MURNI MySQL XAMPP (`db_penjadwalan_ta`) -> TANPA SQLite
+Port Database  : 3306 (User: root, Password: kosong)
+Dataset Utama  : Plotting Periode 4 (1).xlsx (Sheet: Sidang Periode 4 AKD, 85 Mahasiswa)
+
+CATATAN DATABASE:
+Sistem ini beroperasi 100% menggunakan database MySQL (XAMPP).
+Tidak menggunakan SQLite sama sekali. Semua tabel, relasi, dan data jadwal
+tersimpan langsung di server MySQL XAMPP.
+
+================================================================================
+1. PRASYARAT WAJIB (MENYALAKAN MYSQL XAMPP)
+================================================================================
+Karena sistem TANPA SQLite, modul MySQL di XAMPP WAJIB dinyalakan terlebih dahulu:
+
+1) Buka aplikasi "XAMPP Control Panel".
+2) Pada baris "MySQL", klik tombol [Start] hingga status berubah menjadi hijau (Port 3306).
+3) Cek apakah database `db_penjadwalan_ta` sudah aktif melalui browser:
+   http://localhost/phpmyadmin/ -> Pilih database: `db_penjadwalan_ta`
+
+================================================================================
+2. CARA MENJALANKAN SERVER WEBSITE
+================================================================================
+Buka terminal (PowerShell atau Command Prompt) di folder project:
+
+    cd C:\laravel\Django\Tugasakhir
+
+Jalankan server Django:
+
+    .\.venv\Scripts\python.exe manage.py runserver
+
+Buka browser dan buka alamat:
+    http://127.0.0.1:8000/
+
+Untuk mematikan server:
+    Tekan tombol [CTRL] + [C] pada jendela terminal.
+
+================================================================================
+3. INFORMASI AKUN LOGIN ADMIN
+================================================================================
+- URL Login Admin : http://127.0.0.1:8000/admin/
+- Username        : admin
+- Password        : admin123
+
+================================================================================
+4. ALUR PENGGUNAAN SISTEM (5 LANGKAH RESMI)
+================================================================================
+Ikuti 5 langkah berurutan pada menu navigasi website:
+
+[Langkah 1] Import Data Master (http://127.0.0.1:8000/import/)
+- Unggah file Excel "Plotting Periode 4 (1).xlsx".
+- Sistem otomatis memfilter khusus mahasiswa Program Studi S1 Sistem Informasi
+  (85 Mahasiswa) beserta pembimbing (P1, P2) dan penguji (U1, U2), lalu menyimpannya
+  ke tabel MySQL `scheduler_student`.
+
+[Langkah 2] Batasan Slot & Hari (http://127.0.0.1:8000/settings/)
+- Alokasi Hari Akademik  : 8 Hari (Hari Ke-1 s/d Hari Ke-8)
+- Jam Operasional Sidang : 08.00 - 16.30 (5 Sesi per hari, durasi 90 menit)
+- Ruangan Sidang         : 3 Ruang Fisik (KTT2.04, KTT2.05, KTT2.06)
+- Total Kapasitas Slot   : 8 x 5 x 3 = 120 Slot (Tersedia 35 slot cadangan/buffer)
+- Disimpan di tabel MySQL `scheduler_settings` dan `scheduler_room`.
+
+[Langkah 3] Data Mahasiswa (http://127.0.0.1:8000/students/)
+- Memeriksa daftar 85 mahasiswa yang tersimpan di MySQL.
+- Melihat status jadwal (sudah terjadwal atau belum) dan status kunci (locked).
+
+[Langkah 4] Algoritma Genetika (http://127.0.0.1:8000/genetic/)
+- Parameter Default: Populasi = 50, Generasi Maks = 100, Elitisme = 2, Seleksi = Turnamen (k=3).
+- Klik tombol "Jalankan Algoritma Genetika".
+- Sistem melakukan optimasi bebas bentrok (0 bentrok dosen & 0 bentrok ruang).
+- Waktu eksekusi rata-rata: < 0.10 detik dengan tingkat keberhasilan 100%.
+- Hasil jadwal langsung di-commit ke MySQL.
+
+[Langkah 5] Penjadwalan Manual & Kunci Jadwal (http://127.0.0.1:8000/manual/)
+- Admin bebas memindahkan atau mengosongkan jadwal mahasiswa tertentu.
+- Opsi "Kunci Jadwal (Lock)": Jika dicentang, Algoritma Genetika di masa depan
+  TIDAK AKAN menggeser jadwal mahasiswa tersebut.
+
+[Langkah 6 / Akhir] Ekspor Jadwal Excel (http://127.0.0.1:8000/export/)
+- Unduh jadwal final yang sudah tertata rapi dalam format Excel (.xlsx).
+- Data ditarik langsung dari MySQL, dilengkapi auto-column widths dan format resmi.
+
+================================================================================
+5. PERINTAH MAINTENANCE DATABASE MYSQL (JIKA DIPERLUKAN)
+================================================================================
+Jika sewaktu-waktu struktur tabel perlu diperbarui ke MySQL:
+
+    .\.venv\Scripts\python.exe manage.py makemigrations
+    .\.venv\Scripts\python.exe manage.py migrate
+
+Jika ingin membuat akun admin MySQL baru:
+
+    .\.venv\Scripts\python.exe manage.py createsuperuser
+================================================================================

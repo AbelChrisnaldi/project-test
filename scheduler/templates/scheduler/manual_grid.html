@@ -1,0 +1,408 @@
+﻿{% extends 'scheduler/base.html' %}
+
+{% block title %}Penjadwalan Manual & Matriks Jadwal Sidang{% endblock %}
+{% block header_title %}Penjadwalan Manual & Matriks Jadwal Sidang{% endblock %}
+
+{% block content %}
+<!-- Top Toolbar & Status -->
+<div class="card mb-4">
+  <div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div>
+        <span class="text-secondary small">Mahasiswa Terjadwal:</span>
+        <strong class="text-success fs-6">{{ scheduled_count }}</strong> / {{ total_students }}
+      </div>
+      <div class="vr"></div>
+      <div>
+        <span class="text-secondary small">Slot Kosong / Belum Terjadwal:</span>
+        <strong class="{% if unscheduled_count > 0 %}text-danger{% else %}text-muted{% endif %} fs-6">{{ unscheduled_count }}</strong>
+      </div>
+      <div class="vr"></div>
+      <div>
+        <span class="text-secondary small">Status Bentrok:</span>
+        {% if conflict_data.total_conflicts == 0 %}
+          <span class="badge bg-success"><i class="bi bi-shield-check me-1"></i>0 Bentrok (Aman)</span>
+        {% else %}
+          <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ conflict_data.total_conflicts }} Bentrok</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Batch Actions Dropdown -->
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalUnscheduled">
+        <i class="bi bi-person-lines-fill me-1"></i> Mahasiswa Belum Terjadwal ({{ unscheduled_count }})
+      </button>
+
+      <div class="dropdown">
+        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          <i class="bi bi-gear me-1"></i> Aksi Massal
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end small">
+          <li><a class="dropdown-item" href="javascript:void(0)" onclick="executeBatchAction('lock_all')"><i class="bi bi-lock-fill text-warning me-2"></i>Kunci Semua Jadwal Terisi</a></li>
+          <li><a class="dropdown-item" href="javascript:void(0)" onclick="executeBatchAction('unlock_all')"><i class="bi bi-unlock text-secondary me-2"></i>Buka Kunci Semua Jadwal</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="executeBatchAction('clear_unlocked')"><i class="bi bi-trash me-2"></i>Kosongkan Jadwal Yang Tidak Dikunci</a></li>
+          <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="executeBatchAction('clear_all')"><i class="bi bi-x-circle me-2"></i>Kosongkan Semua Jadwal (Reset Total)</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Conflict Alert Banner (if clashes exist) -->
+{% if conflict_data.total_conflicts > 0 %}
+  <div class="alert alert-danger mb-4 p-3">
+    <div class="fw-bold mb-2"><i class="bi bi-exclamation-octagon-fill me-2"></i>Ditemukan Bentrok Jadwal Pada Sistem:</div>
+    <ul class="mb-0 small ps-3">
+      {% for c in conflict_data.lecturer_conflicts %}
+        <li class="mb-1">
+          <strong>{{ c.message }}</strong> &mdash; Ruang: {% for r in c.rooms %}Ruang {{ r }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          ({% for st in c.students %}{{ st.nim }} - {{ st.nama }}{% if not forloop.last %} vs {% endif %}{% endfor %})
+        </li>
+      {% endfor %}
+      {% for c in conflict_data.room_conflicts %}
+        <li class="mb-1">
+          <strong>{{ c.message }}</strong> ({% for st in c.students %}{{ st.nim }}{% if not forloop.last %}, {% endif %}{% endfor %})
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+<!-- Day Selector Tabs -->
+<ul class="nav nav-pills mb-3 gap-2 flex-wrap">
+  {% for card in day_cards %}
+    <li class="nav-item">
+      <a class="nav-link py-2 px-3 {% if card.day_num == selected_day %}active fw-bold{% else %}bg-white border text-dark{% endif %}" href="?day={{ card.day_num }}">
+        <div class="small">Hari Ke-{{ card.day_num }}</div>
+        <div class="fw-semibold">{{ card.label }}</div>
+        <span class="badge {% if card.day_num == selected_day %}bg-white text-primary{% else %}bg-secondary{% endif %} mt-1" style="font-size: 0.7rem;">
+          {{ card.count }} Sidang
+        </span>
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+
+<!-- Grid Table Card -->
+<div class="card">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="fw-bold">
+      <i class="bi bi-calendar3 text-primary me-2"></i>
+      Matriks Jadwal: Hari Ke-{{ selected_day }} ({% for card in day_cards %}{% if card.day_num == selected_day %}{{ card.label }}{% endif %}{% endfor %})
+    </span>
+    <small class="text-muted">Klik pada kartu untuk ubah, kosongkan, atau kunci slot.</small>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered mb-0 align-middle" style="min-width: 900px;">
+      <thead class="table-light text-center small">
+        <tr>
+          <th style="width: 140px;">Sesi / Jam</th>
+          {% for r in room_labels %}
+            <th>
+              <div class="fw-bold">Ruang {{ forloop.counter }}</div>
+              <small class="text-muted">{{ r }}</small>
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in grid %}
+          <tr>
+            <!-- Time Column -->
+            <td class="bg-light text-center">
+              <span class="badge bg-secondary mb-1">Sesi {{ row.slot_num }}</span>
+              <div class="fw-bold small text-dark">{{ row.time_str }}</div>
+            </td>
+
+            <!-- Room Cells -->
+            {% for cell in row.cells %}
+              <td class="p-2 {% if cell.is_clash %}conflict-border{% endif %}" style="vertical-align: top; width: calc(100% / {{ room_labels|length }}); min-height: 120px;">
+                {% if cell.student %}
+                  <!-- Occupied Card -->
+                  <div class="card p-2 shadow-sm border {% if cell.is_clash %}border-danger bg-danger bg-opacity-10{% elif cell.student.is_locked %}border-warning bg-warning bg-opacity-10{% else %}bg-white{% endif %} h-100 position-relative">
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                      <span class="badge {% if cell.student.is_locked %}bg-warning text-dark{% else %}bg-primary{% endif %}" style="font-size: 0.68rem;">
+                        {{ cell.student.nim }}
+                      </span>
+                      <div class="d-flex gap-1">
+                        {% if cell.student.is_locked %}
+                          <span class="text-warning" title="Terkunci"><i class="bi bi-lock-fill"></i></span>
+                        {% endif %}
+                        {% if cell.is_clash %}
+                          <span class="text-danger" title="Bentrok Terdeteksi!"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="fw-bold text-dark text-truncate small" title="{{ cell.student.nama }}">{{ cell.student.nama }}</div>
+                    <div class="text-secondary small text-truncate" style="font-size: 0.72rem;" title="{{ cell.student.prodi }}">{{ cell.student.prodi }}</div>
+
+                    <div class="mt-2 pt-2 border-top" style="font-size: 0.7rem;">
+                      <div><strong class="text-primary">P:</strong> {{ cell.student.pembimbing_1|default:"-" }}, {{ cell.student.pembimbing_2|default:"-" }}</div>
+                      <div><strong class="text-warning text-dark">U:</strong> {{ cell.student.penguji_1|default:"-" }}, {{ cell.student.penguji_2|default:"-" }}</div>
+                    </div>
+
+                    <!-- Cell Actions -->
+                    <div class="mt-2 pt-1 d-flex justify-content-between align-items-center">
+                      <button class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size: 0.7rem;" onclick="openAssignModal({{ selected_day }}, {{ cell.slot_num }}, {{ cell.room_num }}, {{ cell.student.id }}, '{{ cell.student.nim|escapejs }}', '{{ cell.student.nama|escapejs }}', {{ cell.student.is_locked|lower }})">
+                        <i class="bi bi-arrow-left-right"></i> Pindah
+                      </button>
+
+                      <button class="btn btn-outline-danger btn-sm py-0 px-1" style="font-size: 0.7rem;" onclick="clearSlot({{ cell.student.id }})" title="Kosongkan Slot">
+                        <i class="bi bi-trash"></i> Kosongkan
+                      </button>
+                    </div>
+                  </div>
+
+                  {% if cell.multiple_students %}
+                    <div class="mt-1 alert alert-danger p-1 small mb-0" style="font-size: 0.7rem;">
+                      <strong>Bentrok Ruang!</strong> Ada {{ cell.multiple_students|length|add:1 }} mahasiswa di ruangan ini.
+                    </div>
+                  {% endif %}
+
+                {% else %}
+                  <!-- Empty Slot Cell -->
+                  <div class="p-3 text-center border border-dashed rounded text-muted h-100 d-flex flex-column justify-content-center align-items-center" style="min-height: 110px; background-color: #fafafa;">
+                    <small class="text-secondary mb-2" style="font-size: 0.75rem;">Slot Kosong</small>
+                    <button class="btn btn-outline-primary btn-sm py-1 px-2" style="font-size: 0.72rem;" onclick="openAssignModal({{ selected_day }}, {{ cell.slot_num }}, {{ cell.room_num }}, null, '', '', false)">
+                      <i class="bi bi-plus-lg"></i> Isi Mahasiswa
+                    </button>
+                  </div>
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Assign / Move Student to Slot -->
+<div class="modal fade" id="modalAssignSlot" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold" id="modalAssignTitle">Tentukan Mahasiswa pada Slot</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="p-2 bg-light rounded mb-3 small">
+          <strong>Lokasi Slot:</strong>
+          <span id="modal_slot_info" class="text-primary fw-bold"></span>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Pilih Mahasiswa</label>
+          <select id="modal_student_select" class="form-select form-select-sm">
+            <option value="">-- Pilih Mahasiswa --</option>
+            <optgroup label="Belum Terjadwal (Kosong)">
+              {% for s in unscheduled_students %}
+                <option value="{{ s.id }}">{{ s.nim }} - {{ s.nama }} (P: {{ s.pembimbing_1 }}/{{ s.pembimbing_2 }} | U: {{ s.penguji_1 }}/{{ s.penguji_2 }})</option>
+              {% endfor %}
+            </optgroup>
+          </select>
+          <div class="form-text small">Mahasiswa yang dipilih akan dialokasikan ke slot ini.</div>
+        </div>
+
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" id="modal_is_locked" checked>
+          <label class="form-check-label small fw-bold" for="modal_is_locked">
+            <i class="bi bi-lock-fill text-warning me-1"></i> Kunci Jadwal Ini (Locked)
+          </label>
+          <div class="form-text small">Jika dikunci, Algoritma Genetika tidak akan menggeser mahasiswa ini saat optimasi dijalankan.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveSlotAssignment()">Simpan Alokasi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Unscheduled Students Drawer -->
+<div class="modal fade" id="modalUnscheduled" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-person-x me-2 text-danger"></i>Mahasiswa Belum Terjadwal (Slot Kosong)</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        {% if unscheduled_students %}
+          <div class="p-3 bg-light border-bottom small text-muted">
+            Berikut adalah daftar mahasiswa yang slot hari dan ruangannya masih kosong. Klik "Jadwalkan" untuk menempatkan secara manual atau jalankan Algoritma Genetika untuk mengisinya secara otomatis.
+          </div>
+          <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+            <table class="table table-hover table-sm align-middle mb-0 small">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th>No</th>
+                  <th>NIM & Nama</th>
+                  <th>Program Studi</th>
+                  <th>Pembimbing</th>
+                  <th>Penguji</th>
+                  <th class="text-end">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in unscheduled_students %}
+                  <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                      <div class="fw-bold">{{ s.nim }}</div>
+                      <div>{{ s.nama }}</div>
+                    </td>
+                    <td>{{ s.prodi }}</td>
+                    <td>{{ s.pembimbing_1|default:"-" }}, {{ s.pembimbing_2|default:"-" }}</td>
+                    <td>{{ s.penguji_1|default:"-" }}, {{ s.penguji_2|default:"-" }}</td>
+                    <td class="text-end">
+                      <a href="{% url 'scheduler:student_edit' s.id %}" class="btn btn-primary btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                        Jadwalkan Manual
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-check-circle-fill text-success fs-1"></i>
+            <h6 class="mt-2 fw-bold text-success">Semua Mahasiswa Sudah Memiliki Jadwal!</h6>
+            <p class="small">Tidak ada mahasiswa dengan slot kosong.</p>
+          </div>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let targetSlot = { day: null, slot: null, room: null };
+
+  function openAssignModal(day, slot, room, currentStudentId, currentNim, currentNama, isLocked) {
+    targetSlot = { day, slot, room };
+    document.getElementById('modal_slot_info').textContent = `Hari Ke-${day}, Sesi ${slot}, Ruang ${room}`;
+    document.getElementById('modal_is_locked').checked = isLocked !== undefined ? isLocked : true;
+
+    const select = document.getElementById('modal_student_select');
+    if (currentStudentId) {
+      // Check if current student exists in select, else add option
+      let opt = select.querySelector(`option[value="${currentStudentId}"]`);
+      if (!opt) {
+        opt = document.createElement('option');
+        opt.value = currentStudentId;
+        opt.textContent = `${currentNim} - ${currentNama} (Mahasiswa Saat Ini)`;
+        select.insertBefore(opt, select.firstChild.nextSibling);
+      }
+      select.value = currentStudentId;
+    } else {
+      select.value = '';
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('modalAssignSlot'));
+    modal.show();
+  }
+
+  async function saveSlotAssignment() {
+    const studentId = document.getElementById('modal_student_select').value;
+    const isLocked = document.getElementById('modal_is_locked').checked;
+
+    if (!studentId) {
+      alert("Harap pilih mahasiswa terlebih dahulu.");
+      return;
+    }
+
+    try {
+      const response = await fetch("{% url 'scheduler:api_assign_slot' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+          student_id: studentId,
+          day_num: targetSlot.day,
+          slot_num: targetSlot.slot,
+          room_num: targetSlot.room,
+          is_locked: isLocked
+        })
+      });
+
+      const res = await response.json();
+      if (res.success) {
+        location.reload();
+      } else {
+        alert("Gagal: " + res.message);
+      }
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+  }
+
+  async function clearSlot(studentId) {
+    if (!confirm("Kosongkan slot mahasiswa ini? Slot akan menjadi kosong.")) return;
+    try {
+      const response = await fetch("{% url 'scheduler:api_clear_slot' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ student_id: studentId })
+      });
+
+      const res = await response.json();
+      if (res.success) {
+        location.reload();
+      } else {
+        alert("Gagal: " + res.message);
+      }
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+  }
+
+  async function executeBatchAction(actionName) {
+    const msgs = {
+      'lock_all': 'Kunci semua jadwal yang sudah terisi?',
+      'unlock_all': 'Buka kunci semua jadwal?',
+      'clear_unlocked': 'Kosongkan semua jadwal yang TIDAK terkunci? Mahasiswa terkunci tetap aman.',
+      'clear_all': 'PERINGATAN: Kosongkan SELURUH jadwal mahasiswa menjadi kosong?'
+    };
+
+    if (!confirm(msgs[actionName])) return;
+
+    try {
+      const response = await fetch("{% url 'scheduler:api_batch_action' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ action: actionName })
+      });
+
+      const res = await response.json();
+      if (res.success) {
+        location.reload();
+      } else {
+        alert("Gagal: " + res.message);
+      }
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,283 @@
+﻿{% extends 'scheduler/base.html' %}
+
+{% block title %}Edit Mahasiswa & Jadwal Manual{% endblock %}
+{% block header_title %}Edit Data Mahasiswa & Penjadwalan Manual{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-person-gear text-primary me-2"></i>Edit Data & Alokasi Slot: {{ student.nim }} - {{ student.nama }}</h6>
+        <a href="{% url 'scheduler:student_list' %}" class="btn btn-outline-secondary btn-sm">&larr; Kembali</a>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+          {% csrf_token %}
+          
+          <h6 class="fw-bold text-primary mb-3">Informasi Mahasiswa</h6>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">NIM</label>
+              <input type="text" name="nim" class="form-control" value="{{ student.nim }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Nama Lengkap</label>
+              <input type="text" name="nama" class="form-control" value="{{ student.nama }}" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Program Studi</label>
+              <input type="text" name="prodi" class="form-control" value="{{ student.prodi }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Kelompok Keahlian</label>
+              <input type="text" name="kelompok_keahlian" class="form-control" value="{{ student.kelompok_keahlian }}">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Judul Tugas Akhir</label>
+            <textarea name="judul" rows="2" class="form-control">{{ student.judul }}</textarea>
+          </div>
+
+          <h6 class="fw-bold text-primary mb-3 mt-4">Dosen Pembimbing & Penguji</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Kode Pembimbing 1</label>
+              <input type="text" id="id_pembimbing_1" name="pembimbing_1" class="form-control" value="{{ student.pembimbing_1 }}" oninput="updateSlotStatus()">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Kode Pembimbing 2</label>
+              <input type="text" id="id_pembimbing_2" name="pembimbing_2" class="form-control" value="{{ student.pembimbing_2 }}" oninput="updateSlotStatus()">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Kode Penguji 1</label>
+              <input type="text" id="id_penguji_1" name="penguji_1" class="form-control" value="{{ student.penguji_1 }}" oninput="updateSlotStatus()">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Kode Penguji 2</label>
+              <input type="text" id="id_penguji_2" name="penguji_2" class="form-control" value="{{ student.penguji_2 }}" oninput="updateSlotStatus()">
+            </div>
+          </div>
+
+          <div class="p-3 bg-light rounded border mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold text-dark mb-0"><i class="bi bi-calendar-check text-success me-2"></i>Penjadwalan Manual (Hari & Ruangan Bisa Kosong)</h6>
+              <span id="badge_status_header" class="badge bg-secondary">Status: Kosong</span>
+            </div>
+            <p class="text-muted small mb-3">
+              Admin bebas menentukan hari dan ruangan secara manual, atau mengosongkannya. Sistem akan otomatis mendeteksi apakah slot tersebut <strong>Kosong</strong>, <strong>Sudah Terisi</strong>, atau menyebabkan <strong>Bentrok Dosen</strong>.
+            </p>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">Pilih Hari</label>
+                <select id="select_day" name="day_num" class="form-select" onchange="updateSlotStatus()">
+                  <option value="">-- Kosong / Belum Ditentukan --</option>
+                  {% for lbl in day_labels %}
+                    <option value="{{ forloop.counter }}" {% if student.day_num == forloop.counter %}selected{% endif %}>
+                      Hari Ke-{{ forloop.counter }} ({{ lbl }})
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">Pilih Sesi / Jam</label>
+                <select id="select_slot" name="slot_num" class="form-select" onchange="updateSlotStatus()">
+                  <option value="">-- Kosong / Belum Ditentukan --</option>
+                  {% for t in slot_times %}
+                    <option value="{{ forloop.counter }}" {% if student.slot_num == forloop.counter %}selected{% endif %}>
+                      Sesi {{ forloop.counter }} ({{ t }})
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">Pilih Ruangan</label>
+                <select id="select_room" name="room_num" class="form-select" onchange="updateSlotStatus()">
+                  <option value="">-- Kosong / Belum Ditentukan --</option>
+                  {% for r in room_labels %}
+                    <option value="{{ forloop.counter }}" {% if student.room_num == forloop.counter %}selected{% endif %}>
+                      Ruang {{ forloop.counter }} ({{ r }})
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <!-- Live Status Alert Box -->
+            <div id="slot_status_box" class="mt-3 p-3 rounded small border" style="display: none;">
+              <!-- Akan diisi otomatis oleh JavaScript -->
+            </div>
+
+            <div class="form-check mt-3">
+              <input class="form-check-input" type="checkbox" name="is_locked" id="id_is_locked" {% if student.is_locked %}checked{% endif %}>
+              <label class="form-check-label small fw-bold text-dark" for="id_is_locked">
+                <i class="bi bi-lock-fill text-warning me-1"></i> Kunci Jadwal Ini (Locked)
+              </label>
+              <div class="form-text small">Jika dicentang, Algoritma Genetika tidak akan mengubah slot mahasiswa ini saat optimasi dijalankan.</div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-save me-1"></i> Simpan Perubahan
+            </button>
+            <div class="d-flex gap-2">
+              <a href="{% url 'scheduler:student_clear_slot' student.id %}" class="btn btn-outline-warning" onclick="return confirm('Kosongkan slot mahasiswa ini?')">
+                <i class="bi bi-dash-circle me-1"></i> Kosongkan Slot Jadwal
+              </a>
+              <a href="{% url 'scheduler:student_delete' student.id %}" class="btn btn-outline-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data mahasiswa {{ student.nim }} ({{ student.nama }}) secara permanen?')">
+                <i class="bi bi-trash me-1"></i> Hapus Mahasiswa
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Peta data keterisian ruangan & jadwal dosen mahasiswa lain
+  const roomOccupancy = {{ room_map_json|safe }};
+  const lecturerOccupancy = {{ lecturer_map_json|safe }};
+  const currentStudentId = {{ student.id }};
+
+  function getLecturerCodes() {
+    const list = [];
+    ['id_pembimbing_1', 'id_pembimbing_2', 'id_penguji_1', 'id_penguji_2'].forEach(id => {
+      const val = document.getElementById(id).value.trim().toUpperCase();
+      if (val && !['-', 'NONE', 'TIDAK ADA', 'TIDAK PERLU DIISI'].includes(val)) {
+        list.push(val);
+      }
+    });
+    return list;
+  }
+
+  function updateSlotStatus() {
+    const day = document.getElementById('select_day').value;
+    const slot = document.getElementById('select_slot').value;
+    const room = document.getElementById('select_room').value;
+    const statusBox = document.getElementById('slot_status_box');
+    const headerBadge = document.getElementById('badge_status_header');
+
+    // Jika salah satu atau semuanya kosong
+    if (!day || !slot || !room) {
+      statusBox.style.display = 'block';
+      statusBox.className = 'mt-3 p-3 rounded small border bg-white text-muted';
+      statusBox.innerHTML = `
+        <div class="d-flex align-items-center text-secondary">
+          <i class="bi bi-dash-circle fs-5 me-2 text-muted"></i>
+          <div>
+            <strong>Status Slot: Kosong / Belum Dipilih Lengkap</strong>
+            <div>Pilih Hari, Sesi, dan Ruangan di atas untuk melihat apakah slot tersebut kosong atau sudah terisi.</div>
+          </div>
+        </div>
+      `;
+      headerBadge.className = 'badge bg-secondary';
+      headerBadge.textContent = 'Status: Belum Terjadwal';
+      return;
+    }
+
+    const roomKey = `${day}_${slot}_${room}`;
+    const periodKey = `${day}_${slot}`;
+    const studentLecturers = getLecturerCodes();
+
+    const isRoomOccupied = roomOccupancy[roomKey];
+    let lecturerClashes = [];
+
+    if (lecturerOccupancy[periodKey]) {
+      lecturerOccupancy[periodKey].forEach(item => {
+        if (studentLecturers.includes(item.lecturer)) {
+          lecturerClashes.push(item);
+        }
+      });
+    }
+
+    statusBox.style.display = 'block';
+
+    // Kasus 1: Bentrok Ruangan & Bentrok Dosen
+    if (isRoomOccupied && lecturerClashes.length > 0) {
+      headerBadge.className = 'badge bg-danger';
+      headerBadge.textContent = '🔴 Bentrok Ganda (Ruangan & Dosen)';
+      statusBox.className = 'mt-3 p-3 rounded small border border-danger bg-danger bg-opacity-10 text-danger';
+
+      let clashText = lecturerClashes.map(c => `<b>${c.lecturer}</b> (menguji ${c.student_nim} - ${c.student_nama} di Ruang ${c.room_num})`).join(', ');
+
+      statusBox.innerHTML = `
+        <div class="d-flex align-items-start">
+          <i class="bi bi-x-octagon-fill fs-4 me-2 text-danger"></i>
+          <div>
+            <div class="fw-bold">PERINGATAN: Ruangan Sudah Terisi & Dosen Bentrok!</div>
+            <div class="mt-1">1. Ruangan ini <b>SUDAH TERISI</b> oleh: <strong>${isRoomOccupied.nim} - ${isRoomOccupied.nama}</strong>.</div>
+            <div class="mt-1">2. Dosen yang sama sedang menguji di ruangan lain pada sesi ini: ${clashText}.</div>
+          </div>
+        </div>
+      `;
+    }
+    // Kasus 2: Hanya Bentrok Ruangan (Ruang sudah dipakai mahasiswa lain)
+    else if (isRoomOccupied) {
+      headerBadge.className = 'badge bg-danger';
+      headerBadge.textContent = '🔴 Ruangan Sudah Terisi';
+      statusBox.className = 'mt-3 p-3 rounded small border border-danger bg-danger bg-opacity-10 text-danger';
+      statusBox.innerHTML = `
+        <div class="d-flex align-items-center">
+          <i class="bi bi-door-closed-fill fs-4 me-2 text-danger"></i>
+          <div>
+            <div class="fw-bold">SLOT TERISI: Ruangan ini sudah dipakai oleh mahasiswa lain!</div>
+            <div>Mahasiswa penghuni: <strong>${isRoomOccupied.nim} - ${isRoomOccupied.nama}</strong> (${isRoomOccupied.prodi}).</div>
+            <div class="text-muted small mt-1">Saran: Pilih ruangan lain yang masih kosong di sesi ini agar tidak tumpang tindih.</div>
+          </div>
+        </div>
+      `;
+    }
+    // Kasus 3: Ruang kosong, tapi ada Dosen Bentrok di ruangan lain
+    else if (lecturerClashes.length > 0) {
+      headerBadge.className = 'badge bg-warning text-dark';
+      headerBadge.textContent = '⚠️ Ruangan Kosong, Tapi Dosen Bentrok';
+      statusBox.className = 'mt-3 p-3 rounded small border border-warning bg-warning bg-opacity-10 text-dark';
+
+      let clashText = lecturerClashes.map(c => `<b>[${c.lecturer}]</b> sedang ada di Ruang ${c.room_num} (${c.student_nim} - ${c.student_nama})`).join('<br>');
+
+      statusBox.innerHTML = `
+        <div class="d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle-fill fs-4 me-2 text-warning"></i>
+          <div>
+            <div class="fw-bold text-danger">BENTROK DOSEN: Dosen terdaftar di ruangan lain pada jam yang sama!</div>
+            <div class="mt-1">${clashText}</div>
+            <div class="small mt-1 text-muted">Saran: Pindahkan ke sesi waktu atau hari yang lain agar dosen bisa hadir.</div>
+          </div>
+        </div>
+      `;
+    }
+    // Kasus 4: AMAN & KOSONG
+    else {
+      headerBadge.className = 'badge bg-success';
+      headerBadge.textContent = '🟢 Slot Kosong & Aman';
+      statusBox.className = 'mt-3 p-3 rounded small border border-success bg-success bg-opacity-10 text-success';
+      statusBox.innerHTML = `
+        <div class="d-flex align-items-center">
+          <i class="bi bi-check-circle-fill fs-4 me-2 text-success"></i>
+          <div>
+            <div class="fw-bold">SLOT TERSEDIA (KOSONG)!</div>
+            <div>Ruangan ini belum ada penghuni, dan tidak ada dosen pembimbing/penguji yang bentrok di sesi jam ini.</div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // Jalankan deteksi saat halaman pertama kali terbuka
+  document.addEventListener('DOMContentLoaded', () => {
+    updateSlotStatus();
+  });
+</script>
+{% endblock %}

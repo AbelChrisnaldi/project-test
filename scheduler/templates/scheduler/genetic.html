@@ -1,0 +1,272 @@
+﻿{% extends 'scheduler/base.html' %}
+
+{% block title %}Eksekusi Algoritma Genetika (GA){% endblock %}
+{% block header_title %}Eksekusi Algoritma Genetika (GA Optimization){% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Left Column: Controls & Execution Card -->
+  <div class="col-lg-5">
+    <div class="card mb-4">
+      <div class="card-header bg-white">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-cpu text-primary me-2"></i>Konfigurasi Eksekusi GA</h6>
+      </div>
+      <div class="card-body p-4">
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-muted">Status Data Saat Ini</label>
+          <div class="p-3 bg-light rounded border">
+            <div class="d-flex justify-content-between mb-1 small">
+              <span>Total Mahasiswa:</span>
+              <strong class="text-dark">{{ student_count }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-1 small">
+              <span>Jadwal Terkunci (Manual):</span>
+              <span class="badge bg-warning text-dark">{{ locked_count }} Terkunci</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1 small">
+              <span>Akan Dioptimasi oleh GA:</span>
+              <strong class="text-primary">{{ unlocked_count }} Mahasiswa</strong>
+            </div>
+            <div class="d-flex justify-content-between small">
+              <span>Total Kapasitas Tersedia:</span>
+              <strong class="{% if capacity_ok %}text-success{% else %}text-danger{% endif %}">{{ capacity }} Slot</strong>
+            </div>
+          </div>
+        </div>
+
+        {% if not capacity_ok %}
+          <div class="alert alert-danger small mb-3">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> Kapasitas slot ({{ capacity }}) kurang dari jumlah mahasiswa ({{ student_count }}). Silakan tambah jumlah hari atau ruangan pada <a href="{% url 'scheduler:settings' %}">Pengaturan</a>.
+          </div>
+        {% endif %}
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-bold">Ukuran Populasi</label>
+            <input type="number" id="ga_pop_size" class="form-control form-control-sm" value="{{ session.population_size }}">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold">Maksimum Generasi</label>
+            <input type="number" id="ga_max_gen" class="form-control form-control-sm" value="{{ session.max_generations }}">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold">Crossover Rate</label>
+            <input type="number" step="0.05" id="ga_cx_rate" class="form-control form-control-sm" value="{{ session.crossover_rate }}">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold">Mutation Rate</label>
+            <input type="number" step="0.05" id="ga_mut_rate" class="form-control form-control-sm" value="{{ session.mutation_rate }}">
+          </div>
+        </div>
+
+        <button id="btn_run_ga" class="btn btn-primary btn-lg w-100 py-3 fw-bold" onclick="runGeneticAlgorithm()" {% if not capacity_ok or student_count == 0 %}disabled{% endif %}>
+          <i class="bi bi-play-circle-fill me-2 fs-5"></i> Mulai Optimasi GA
+        </button>
+      </div>
+    </div>
+
+    <!-- History Logs -->
+    {% if logs %}
+      <div class="card">
+        <div class="card-header bg-white">
+          <h6 class="mb-0 fw-bold small text-secondary"><i class="bi bi-clock-history me-1"></i>Riwayat Eksekusi GA</h6>
+        </div>
+        <div class="card-body p-2">
+          <ul class="list-group list-group-flush small">
+            {% for log in logs %}
+              <li class="list-group-item px-2 py-2">
+                <div class="d-flex justify-content-between">
+                  <strong>{{ log.timestamp|date:"d M H:i" }}</strong>
+                  <span class="badge {% if log.final_conflicts == 0 %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                    {{ log.final_conflicts }} Bentrok
+                  </span>
+                </div>
+                <div class="text-muted small mt-1">
+                  {{ log.generations_run }} generasi dalam {{ log.execution_time_seconds|floatformat:2 }}s (Fitness: {{ log.best_fitness|floatformat:4 }})
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Right Column: Live Progress & Results -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-graph-up text-success me-2"></i>Hasil Optimasi & Progress Real-time</h6>
+        <span id="ga_status_badge" class="badge bg-secondary">Menunggu Eksekusi</span>
+      </div>
+      <div class="card-body p-4">
+        <!-- Progress Bar -->
+        <div id="progress_wrapper" class="mb-4" style="display: none;">
+          <div class="d-flex justify-content-between small text-muted mb-1">
+            <span id="progress_text">Menjalankan Algoritma Genetika...</span>
+            <span id="progress_percent">0%</span>
+          </div>
+          <div class="progress" style="height: 12px;">
+            <div id="progress_bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Result Stats Cards -->
+        <div id="result_stats" class="row g-3 mb-4" style="display: none;">
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded text-center border">
+              <span class="text-muted small">Bentrok Akhir</span>
+              <h3 id="stat_conflicts" class="fw-bold mb-0 text-success">0</h3>
+              <small id="stat_conflict_label" class="text-muted">Bebas bentrok</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded text-center border">
+              <span class="text-muted small">Waktu Komputasi</span>
+              <h3 id="stat_duration" class="fw-bold mb-0 text-primary">0s</h3>
+              <small id="stat_gens" class="text-muted">0 generasi</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded text-center border">
+              <span class="text-muted small">Fitness Terbaik</span>
+              <h3 id="stat_fitness" class="fw-bold mb-0 text-dark">0.0</h3>
+              <small class="text-muted">Maks: ~1.00</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Links upon completion -->
+        <div id="success_action_box" class="alert alert-success p-3 mb-4" style="display: none;">
+          <h6 class="fw-bold mb-1"><i class="bi bi-check-circle-fill me-2"></i>Penjadwalan Berhasil Diterapkan ke Sistem!</h6>
+          <p class="small text-muted mb-3" id="success_msg_text">Hasil telah disimpan ke seluruh mahasiswa tanpa ada jadwal yang bentrok.</p>
+          <div class="d-flex gap-2">
+            <a href="{% url 'scheduler:manual_grid' %}" class="btn btn-outline-success btn-sm">
+              <i class="bi bi-grid-3x3 me-1"></i> Buka Matriks Jadwal
+            </a>
+            <a href="{% url 'scheduler:export_view' %}" class="btn btn-success btn-sm">
+              <i class="bi bi-download me-1"></i> Unduh File Excel Hasil
+            </a>
+          </div>
+        </div>
+
+        <!-- Generation Console Log -->
+        <h6 class="fw-bold small text-secondary mb-2">Log Generasi Komputasi:</h6>
+        <div id="ga_console_log" class="p-3 bg-dark text-light rounded font-monospace small" style="height: 320px; overflow-y: auto; font-size: 0.82rem;">
+          <span class="text-secondary">> Sistem siap. Klik tombol "Mulai Optimasi GA" untuk mengeksekusi...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function logMessage(text, color = '#38bdf8') {
+    const consoleDiv = document.getElementById('ga_console_log');
+    const p = document.createElement('div');
+    p.style.color = color;
+    p.textContent = text;
+    consoleDiv.appendChild(p);
+    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+  }
+
+  async function runGeneticAlgorithm() {
+    const btn = document.getElementById('btn_run_ga');
+    const badge = document.getElementById('ga_status_badge');
+    const progressWrapper = document.getElementById('progress_wrapper');
+    const progressBar = document.getElementById('progress_bar');
+    const progressPercent = document.getElementById('progress_percent');
+    const resultStats = document.getElementById('result_stats');
+    const successBox = document.getElementById('success_action_box');
+
+    // UI State Loading
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Sedang Mengoptimasi...`;
+    badge.className = 'badge bg-primary';
+    badge.textContent = 'Memproses GA...';
+    progressWrapper.style.display = 'block';
+    progressBar.style.width = '30%';
+    progressPercent.textContent = '30%';
+    resultStats.style.display = 'none';
+    successBox.style.display = 'none';
+
+    logMessage(`> [GA Engine] Memulai eksekusi Algoritma Genetika...`, '#facc15');
+    logMessage(`> Populasi: ${document.getElementById('ga_pop_size').value} | Maks Generasi: ${document.getElementById('ga_max_gen').value}`);
+    logMessage(`> Crossover: ${document.getElementById('ga_cx_rate').value} | Mutasi: ${document.getElementById('ga_mut_rate').value}`);
+
+    const payload = {
+      population_size: document.getElementById('ga_pop_size').value,
+      max_generations: document.getElementById('ga_max_gen').value,
+      crossover_rate: document.getElementById('ga_cx_rate').value,
+      mutation_rate: document.getElementById('ga_mut_rate').value
+    };
+
+    try {
+      progressBar.style.width = '60%';
+      progressPercent.textContent = '60%';
+
+      const response = await fetch("{% url 'scheduler:api_run_ga' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const res = await response.json();
+
+      progressBar.style.width = '100%';
+      progressPercent.textContent = '100%';
+
+      if (res.success) {
+        badge.className = 'badge bg-success';
+        badge.textContent = 'Optimasi Selesai';
+
+        logMessage(`> [GA Selesai] ${res.message}`, '#4ade80');
+        logMessage(`> Bentrok Awal: ${res.initial_conflicts} -> Bentrok Akhir: ${res.final_conflicts}`, '#4ade80');
+        logMessage(`> Bentrok Ruang: ${res.room_conflicts} | Bentrok Dosen: ${res.lecturer_conflicts}`, '#4ade80');
+        logMessage(`> Waktu Eksekusi: ${res.execution_time_seconds.toFixed(2)} detik (${res.generations_run} generasi)`, '#4ade80');
+
+        // History logs
+        if (res.history && res.history.length) {
+          logMessage(`--- Ringkasan Progres Generasi ---`, '#94a3b8');
+          res.history.forEach((h, i) => {
+            if (i % 10 === 0 || i === res.history.length - 1) {
+              logMessage(`  Gen ${h.generation}: Bentrok=${h.best_conflicts} (Dosen=${h.lecturer_conflicts}, Ruang=${h.room_conflicts}) | Fitness=${h.best_fitness}`, '#94a3b8');
+            }
+          });
+        }
+
+        // Show result stats
+        resultStats.style.display = 'flex';
+        document.getElementById('stat_conflicts').textContent = res.final_conflicts;
+        document.getElementById('stat_conflicts').className = res.final_conflicts === 0 ? 'fw-bold mb-0 text-success' : 'fw-bold mb-0 text-danger';
+        document.getElementById('stat_conflict_label').textContent = res.final_conflicts === 0 ? 'Bebas bentrok!' : 'Masih ada bentrok';
+
+        document.getElementById('stat_duration').textContent = `${res.execution_time_seconds.toFixed(2)}s`;
+        document.getElementById('stat_gens').textContent = `${res.generations_run} generasi`;
+        document.getElementById('stat_fitness').textContent = res.best_fitness.toFixed(4);
+
+        successBox.style.display = 'block';
+        document.getElementById('success_msg_text').textContent = res.message;
+      } else {
+        badge.className = 'badge bg-danger';
+        badge.textContent = 'Gagal';
+        logMessage(`> [Error] ${res.message}`, '#f87171');
+        alert("Gagal menjalankan GA: " + res.message);
+      }
+    } catch (err) {
+      badge.className = 'badge bg-danger';
+      badge.textContent = 'Error';
+      logMessage(`> [Exception] Terjadi kesalahan: ${err.message}`, '#f87171');
+      alert("Error: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-play-circle-fill me-2 fs-5"></i> Jalankan Ulang GA`;
+    }
+  }
+</script>
+{% endblock %}

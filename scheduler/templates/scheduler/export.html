@@ -1,0 +1,82 @@
+﻿{% extends 'scheduler/base.html' %}
+
+{% block title %}Ekspor Output Jadwal ke Excel{% endblock %}
+{% block header_title %}Export Output Jadwal ke Excel (.xlsx){% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header bg-white">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-excel text-success me-2"></i>Pengaturan Unduhan Berkas Excel</h6>
+      </div>
+      <div class="card-body p-4">
+        <p class="text-muted small">
+          Setelah jadwal selesai dioptimasi atau disesuaikan secara manual dan bebas bentrok, hasil akhirnya dapat diekspor kembali menjadi berkas Excel. File ini siap dilabeli nama hari aktual (Senin-Jumat) dan kode fisik ruangan sebelum disebarkan oleh koordinator sidang.
+        </p>
+
+        <!-- Current Schedule Summary -->
+        <div class="p-3 bg-light rounded border mb-4">
+          <div class="row text-center">
+            <div class="col-4">
+              <span class="text-muted small">Total Mahasiswa</span>
+              <h5 class="fw-bold mb-0 text-dark">{{ total_count }}</h5>
+            </div>
+            <div class="col-4">
+              <span class="text-muted small">Sudah Terjadwal</span>
+              <h5 class="fw-bold mb-0 text-success">{{ scheduled_count }}</h5>
+            </div>
+            <div class="col-4">
+              <span class="text-muted small">Belum Terjadwal (Kosong)</span>
+              <h5 class="fw-bold mb-0 {% if unscheduled_count > 0 %}text-danger{% else %}text-muted{% endif %}">{{ unscheduled_count }}</h5>
+            </div>
+          </div>
+        </div>
+
+        <form action="{% url 'scheduler:export_download' %}" method="GET">
+          <!-- Format Type -->
+          <div class="mb-4">
+            <label class="form-label small fw-bold">Pilih Format Susunan Lembar Kerja (Layout)</label>
+            <div class="form-check p-3 border rounded mb-2 bg-white">
+              <input class="form-check-input" type="radio" name="type" id="type_standard" value="standard" checked>
+              <label class="form-check-label small" for="type_standard">
+                <strong>Format Standar Akademik (Format Igrasias Periode 4)</strong>
+                <div class="text-muted">Tabel vertikal kolom No, Periode, NIM, Nama, Judul, Pembimbing, Penguji, Hari, Jam, dan Ruang.</div>
+              </label>
+            </div>
+
+            <div class="form-check p-3 border rounded bg-white">
+              <input class="form-check-input" type="radio" name="type" id="type_matrix" value="matrix">
+              <label class="form-check-label small" for="type_matrix">
+                <strong>Format Matriks Grid (Hari & Jam &times; Ruangan)</strong>
+                <div class="text-muted">Tabel kalender horizontal menampilkan setiap sesi waktu dan kolom ruangan untuk melihat jadwal ruangan secara visual.</div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Naming Style -->
+          <div class="mb-4">
+            <label class="form-label small fw-bold">Pilihan Gaya Penamaan Hari & Ruangan</label>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="naming" id="naming_named" value="named" checked>
+              <label class="form-check-label small" for="naming_named">
+                <strong>Penamaan Nyata</strong> &mdash; Hari diberi label nama (Senin, Selasa, ...) dan Ruangan diberi label fisik ({{ room_labels|slice:":3"|join:", " }}, ...)
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="naming" id="naming_numeric" value="numeric">
+              <label class="form-check-label small" for="naming_numeric">
+                <strong>Penamaan Numerik / Anonim</strong> &mdash; Menggunakan label numerik murni (Hari Ke-1 s.d. {{ session.total_days }}, Ruang 1 s.d. {{ session.total_rooms }})
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold">
+            <i class="bi bi-download me-2"></i> Unduh Berkas Jadwal Excel (.xlsx)
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

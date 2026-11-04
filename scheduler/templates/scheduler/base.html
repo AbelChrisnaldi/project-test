@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Sistem Penjadwalan Tugas Akhir (Algoritma Genetika){% endblock %}</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    :root {
+      --primary-color: #1e40af;
+      --primary-hover: #1d4ed8;
+      --sidebar-bg: #0f172a;
+      --sidebar-hover: #1e293b;
+      --accent-color: #3b82f6;
+    }
+    body {
+      background-color: #f8fafc;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 270px;
+      background: var(--sidebar-bg);
+      color: #94a3b8;
+      min-height: 100vh;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar .brand {
+      padding: 1.25rem 1.5rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .sidebar .nav-link {
+      color: #94a3b8;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      transition: all 0.15s ease-in-out;
+      border-left: 3px solid transparent;
+    }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active {
+      color: #fff;
+      background: var(--sidebar-hover);
+      border-left-color: var(--accent-color);
+    }
+    .sidebar .nav-header {
+      padding: 1rem 1.5rem 0.35rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      font-weight: 700;
+    }
+    .content-area {
+      flex-grow: 1;
+      overflow-y: auto;
+      min-height: 100vh;
+    }
+    .top-header {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0.85rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .card-header {
+      background-color: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      font-weight: 600;
+      padding: 1rem 1.25rem;
+    }
+    .badge-soft-primary { background: #dbeafe; color: #1e40af; }
+    .badge-soft-success { background: #dcfce7; color: #166534; }
+    .badge-soft-warning { background: #fef9c3; color: #854d0e; }
+    .badge-soft-danger { background: #fee2e2; color: #991b1b; }
+    .badge-soft-secondary { background: #f1f5f9; color: #475569; }
+    
+    .slot-cell {
+      min-height: 120px;
+      transition: background-color 0.15s ease;
+    }
+    .slot-cell:hover {
+      background-color: #f1f5f9;
+    }
+    .conflict-border {
+      border: 2px solid #ef4444 !important;
+      background-color: #fff1f2 !important;
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="bi bi-calendar-check-fill text-primary fs-4"></i>
+      <div>
+        <div class="lh-1">SITA Scheduler</div>
+        <small class="text-secondary fw-normal fs-6">Sistem Sidang TA</small>
+      </div>
+    </div>
+
+    <div class="nav-header">Alur Kerja Utama</div>
+    <ul class="nav flex-column mb-2">
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'scheduler:dashboard' %}">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'import_excel' %}active{% endif %}" href="{% url 'scheduler:import_excel' %}">
+          <i class="bi bi-file-earmark-excel"></i> Import Data Master
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}" href="{% url 'scheduler:settings' %}">
+          <i class="bi bi-sliders"></i> Batasan Slot & Hari
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_edit' %}active{% endif %}" href="{% url 'scheduler:student_list' %}">
+          <i class="bi bi-people"></i> Data Mahasiswa
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'genetic' %}active{% endif %}" href="{% url 'scheduler:genetic' %}">
+          <i class="bi bi-cpu"></i> Algoritma Genetika
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'manual_grid' %}active{% endif %}" href="{% url 'scheduler:manual_grid' %}">
+          <i class="bi bi-grid-3x3-gap"></i> Penjadwalan Manual
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'export_view' %}active{% endif %}" href="{% url 'scheduler:export_view' %}">
+          <i class="bi bi-download"></i> Ekspor Jadwal Excel
+        </a>
+      </li>
+    </ul>
+
+
+  </aside>
+
+  <!-- Content Area -->
+  <main class="content-area">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="d-flex align-items-center gap-3">
+        <h5 class="mb-0 fw-bold text-dark">{% block header_title %}Dashboard Penjadwalan{% endblock %}</h5>
+      </div>
+
+
+    </header>
+
+    <!-- Main Container -->
+    <div class="p-4">
+      <!-- Flash Messages -->
+      {% if messages %}
+        <div class="mb-4">
+          {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show d-flex align-items-center" role="alert">
+              {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+              {% elif message.tags == 'error' %}
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+              {% else %}
+                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+              {% endif %}
+              <div>{{ message }}</div>
+              <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
