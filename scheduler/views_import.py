@@ -1,10 +1,11 @@
 import os
 import re
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 from django.contrib import messages
 from .models import ScheduleSession, StudentDefense
 from .views_dashboard import get_current_session
-from .xlsx_utils import read_xlsx
+from .xlsx_utils import read_xlsx, write_xlsx
 
 
 def import_excel(request):
@@ -229,3 +230,56 @@ def load_default_sample(request):
     except Exception as e:
         messages.error(request, f"Gagal memuat berkas contoh: {str(e)}")
         return redirect('scheduler:import_excel')
+
+
+def download_template(request):
+    """
+    Menyediakan berkas template Excel (.xlsx) resmi dengan 1 contoh data dummy
+    agar admin/koordinator dapat mengisi data mahasiswa siap sidang dengan format yang benar.
+    """
+    headers = [
+        'No',
+        'Periode',
+        'Kelompok Keahlian',
+        'Program Studi',
+        'NIM',
+        'Nama Mahasiswa',
+        'Judul Tugas Akhir',
+        'Pembimbing 1',
+        'Pembimbing 2',
+        'Penguji 1',
+        'Penguji 2'
+    ]
+
+    sample_row = [
+        '1',
+        '4',
+        'Rekayasa Sistem Informasi',
+        'S1 Sistem Informasi',
+        '1203220001',
+        'Budi Santoso',
+        'Rancang Bangun Sistem Penjadwalan Sidang Tugas Akhir Berbasis Web Menggunakan Algoritma Genetika',
+        'KHA',
+        'DIT',
+        'SUL',
+        'ADN'
+    ]
+
+    sheets_dict = {
+        'Template Sidang TA': {
+            'title': 'TEMPLATE DATA MASTER REKAPITULASI SIDANG TUGAS AKHIR',
+            'headers': headers,
+            'rows': [sample_row],
+            'col_widths': [6, 10, 24, 24, 14, 24, 48, 14, 14, 14, 14],
+            'center_cols': [0, 1, 4, 7, 8, 9, 10]
+        }
+    }
+
+    excel_bytes = write_xlsx(sheets_dict)
+
+    response = HttpResponse(
+        excel_bytes,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="Template_Data_Sidang_TA.xlsx"'
+    return response

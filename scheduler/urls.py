@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('import/', views.import_excel, name='import_excel'),
     path('import/load-default/', views.load_default_sample, name='load_default_sample'),
+    path('import/template/', views.download_template, name='download_template'),
     path('students/', views.student_list, name='student_list'),
     path('students/edit/<int:student_id>/', views.student_edit, name='student_edit'),
     path('students/delete/<int:student_id>/', views.student_delete, name='student_delete'),
