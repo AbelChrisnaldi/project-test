@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -126,7 +126,7 @@
       </div>
     </div>
 
-    <div class="nav-header">Alur Kerja Utama</div>
+    <div class="nav-header">Alur Penjadwalan</div>
     <ul class="nav flex-column mb-2">
       <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'scheduler:dashboard' %}">
@@ -135,32 +135,32 @@
       </li>
       <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'import_excel' %}active{% endif %}" href="{% url 'scheduler:import_excel' %}">
-          <i class="bi bi-file-earmark-excel"></i> Import Data Master
+          <i class="bi bi-cloud-arrow-up"></i> Unggah Data Sidang
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}" href="{% url 'scheduler:settings' %}">
-          <i class="bi bi-sliders"></i> Batasan Slot & Hari
+          <i class="bi bi-sliders"></i> Atur Waktu & Ruangan
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_edit' %}active{% endif %}" href="{% url 'scheduler:student_list' %}">
-          <i class="bi bi-people"></i> Data Mahasiswa
+          <i class="bi bi-people"></i> Daftar Peserta Sidang
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'genetic' %}active{% endif %}" href="{% url 'scheduler:genetic' %}">
-          <i class="bi bi-cpu"></i> Algoritma Genetika
+          <i class="bi bi-cpu"></i> Penjadwalan Otomatis
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'manual_grid' %}active{% endif %}" href="{% url 'scheduler:manual_grid' %}">
-          <i class="bi bi-grid-3x3-gap"></i> Penjadwalan Manual
+          <i class="bi bi-grid-3x3-gap"></i> Penyesuaian Jadwal
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'export_view' %}active{% endif %}" href="{% url 'scheduler:export_view' %}">
-          <i class="bi bi-download"></i> Ekspor Jadwal Excel
+          <i class="bi bi-file-earmark-arrow-down"></i> Unduh Hasil Jadwal
         </a>
       </li>
     </ul>

@@ -1,7 +1,7 @@
 {% extends 'scheduler/base.html' %}
 
-{% block title %}Import Data Master Sidang TA{% endblock %}
-{% block header_title %}Import Data Master (Berkas Excel Igrasias){% endblock %}
+{% block title %}Unggah Data Sidang TA{% endblock %}
+{% block header_title %}Langkah 1: Unggah Data Sidang Mahasiswa{% endblock %}
 
 {% block content %}
 <div class="row g-4">
@@ -9,11 +9,11 @@
   <div class="col-lg-7">
     <div class="card">
       <div class="card-header bg-white">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-cloud-arrow-up text-primary me-2"></i>Unggah Berkas Rekapitulasi Akademik</h6>
+        <h6 class="mb-0 fw-bold"><i class="bi bi-cloud-arrow-up text-primary me-2"></i>Unggah Berkas Excel Data Sidang</h6>
       </div>
       <div class="card-body p-4">
         <p class="text-muted small">
-          Unggah berkas Excel (*.xlsx) yang didapat dari bagian akademik / rekapitulasi Igrasias. Berkas ini memuat data mahasiswa yang siap sidang beserta pembimbing 1, pembimbing 2, dan dosen pengujinya.
+          Unggah berkas Excel (*.xlsx) yang memuat daftar mahasiswa siap sidang beserta pasangan dosen pembimbing dan dosen pengujinya.
         </p>
 
         <form method="POST" enctype="multipart/form-data">
@@ -21,21 +21,21 @@
           <div class="mb-3">
             <label class="form-label fw-bold small">Pilih Berkas Excel (.xlsx)</label>
             <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
-            <div class="form-text">Mendukung format OpenXML Spreadsheet (.xlsx).</div>
+            <div class="form-text">Mendukung format spreadsheet Excel modern (.xlsx).</div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold small">Pilihan Mode Impor</label>
+            <label class="form-label fw-bold small">Pilihan Alokasi Awal</label>
             <div class="form-check mb-2">
               <input class="form-check-input" type="radio" name="import_mode" id="mode_clean" value="clean" checked>
               <label class="form-check-label small" for="mode_clean">
-                <strong>Slot Kosong (Rekomendasi)</strong> &mdash; Semua mahasiswa diimpor dengan slot hari dan ruang kosong, siap diproses oleh Algoritma Genetika atau ditentukan manual oleh admin.
+                <strong>Kosongkan Jadwal Awal (Rekomendasi)</strong> &mdash; Seluruh peserta siap dijadwalkan secara otomatis oleh Algoritma Genetika atau disesuaikan mandiri oleh koordinator.
               </label>
             </div>
             <div class="form-check">
               <input class="form-check-input" type="radio" name="import_mode" id="mode_existing" value="existing">
               <label class="form-check-label small" for="mode_existing">
-                <strong>Pertahankan Jadwal Bawaan File</strong> &mdash; Jika berkas sudah memiliki kolom Hari/Jam/Ruang terisi, sistem akan mencatatnya sebagai jadwal awal.
+                <strong>Pertahankan Jadwal Awal dari Berkas</strong> &mdash; Jika berkas sudah memiliki kolom Hari/Jam/Ruang terisi, sistem akan mencatatnya sebagai jadwal awal.
               </label>
             </div>
           </div>
@@ -46,7 +46,7 @@
           </div>
 
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-upload me-1"></i> Mulai Proses Impor
+            <i class="bi bi-upload me-1"></i> Mulai Unggah & Simpan
           </button>
         </form>
       </div>
@@ -59,16 +59,16 @@
     <div class="card mb-4 border-success border-opacity-50">
       <div class="card-header bg-success bg-opacity-10 py-3">
         <h6 class="mb-0 fw-bold text-success">
-          <i class="bi bi-file-earmark-excel-fill me-2"></i>Unduh Berkas Template Excel
+          <i class="bi bi-file-earmark-excel-fill me-2"></i>Unduh Template Berkas Excel Resmi
         </h6>
       </div>
       <div class="card-body p-3 small">
         <p class="text-muted mb-3">
-          Gunakan berkas template resmi di bawah ini untuk mengisi data mahasiswa dan dosen sidang. Format kolom sudah disesuaikan secara otomatis agar dapat dibaca oleh sistem tanpa kendala.
+          Gunakan berkas template resmi ini untuk mengisi data mahasiswa dan dosen sidang. Format kolom telah dirancang sesuai sistem agar proses impor berjalan lancar tanpa kendala.
         </p>
 
         <a href="{% url 'scheduler:download_template' %}" class="btn btn-success btn-sm w-100 py-2 fw-semibold">
-          <i class="bi bi-download me-1"></i> Unduh Template (.xlsx)
+          <i class="bi bi-file-earmark-arrow-down me-1"></i> Unduh Template (.xlsx)
         </a>
       </div>
     </div>
@@ -79,7 +79,7 @@
         <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle text-info me-2"></i>Struktur Kolom yang Dikenali</h6>
       </div>
       <div class="card-body small">
-        <p class="text-muted mb-2">Sistem otomatis mendeteksi kolom berikut dari header Excel:</p>
+        <p class="text-muted mb-2">Sistem otomatis mendeteksi kolom berikut dari lembar Excel:</p>
         <ul class="list-unstyled mb-0">
           <li class="mb-1"><span class="badge bg-primary">Wajib</span> <code>NIM</code> &mdash; Nomor Induk Mahasiswa</li>
           <li class="mb-1"><span class="badge bg-secondary">Info</span> <code>Nama</code> &mdash; Nama Mahasiswa</li>

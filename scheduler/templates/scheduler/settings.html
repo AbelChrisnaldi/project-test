@@ -1,7 +1,7 @@
 {% extends 'scheduler/base.html' %}
 
-{% block title %}Pengaturan Batasan Slot & Hari Sidang{% endblock %}
-{% block header_title %}Pengaturan Batasan Slot & Parameter Jadwal{% endblock %}
+{% block title %}Pengaturan Waktu & Ruangan Sidang{% endblock %}
+{% block header_title %}Langkah 2: Pengaturan Waktu & Ruangan Sidang{% endblock %}
 
 {% block content %}
 <form method="POST">
@@ -11,7 +11,7 @@
     <div class="col-lg-8">
       <div class="card mb-4">
         <div class="card-header bg-white">
-          <h6 class="mb-0 fw-bold"><i class="bi bi-sliders text-primary me-2"></i>Batasan Variabel Penjadwalan (Input Manual Admin)</h6>
+          <h6 class="mb-0 fw-bold"><i class="bi bi-sliders text-primary me-2"></i>Pengaturan Alokasi Waktu & Ketersediaan Ruangan</h6>
         </div>
         <div class="card-body p-4">
           <div class="row g-3 mb-3">
@@ -179,7 +179,7 @@
     document.getElementById('span_sessions').textContent = sessions;
     const total = days * sessions * rooms;
     document.getElementById('calc_total_slots').textContent = total;
-    document.getElementById('calc_breakdown').textContent = `${days} Hari × ${sessions} Sesi × ${rooms} Ruang`;
+    document.getElementById('calc_breakdown').textContent = `${days} Hari Ã— ${sessions} Sesi Ã— ${rooms} Ruang`;
 
     const students = {{ student_count }};
     const box = document.getElementById('calc_status_box');
