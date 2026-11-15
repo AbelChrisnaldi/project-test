@@ -21,9 +21,9 @@
       <div>
         <span class="text-secondary small">Status Bentrok:</span>
         {% if conflict_data.total_conflicts == 0 %}
-          <span class="badge bg-success"><i class="bi bi-shield-check me-1"></i>0 Bentrok (Aman)</span>
+          <span class="badge bg-success">0 Bentrok (Aman)</span>
         {% else %}
-          <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ conflict_data.total_conflicts }} Bentrok</span>
+          <span class="badge bg-danger">{{ conflict_data.total_conflicts }} Bentrok</span>
         {% endif %}
       </div>
     </div>
@@ -31,19 +31,19 @@
     <!-- Batch Actions Dropdown -->
     <div class="d-flex gap-2">
       <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalUnscheduled">
-        <i class="bi bi-person-lines-fill me-1"></i> Mahasiswa Belum Terjadwal ({{ unscheduled_count }})
+        Mahasiswa Belum Terjadwal ({{ unscheduled_count }})
       </button>
 
       <div class="dropdown">
         <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-          <i class="bi bi-gear me-1"></i> Aksi Massal
+          Aksi Massal
         </button>
         <ul class="dropdown-menu dropdown-menu-end small">
-          <li><a class="dropdown-item" href="javascript:void(0)" onclick="executeBatchAction('lock_all')"><i class="bi bi-lock-fill text-warning me-2"></i>Kunci Semua Jadwal Terisi</a></li>
-          <li><a class="dropdown-item" href="javascript:void(0)" onclick="executeBatchAction('unlock_all')"><i class="bi bi-unlock text-secondary me-2"></i>Buka Kunci Semua Jadwal</a></li>
+          <li><a class="dropdown-item" href="javascript:void(0)" onclick="executeBatchAction('lock_all')">Kunci Semua Jadwal Terisi</a></li>
+          <li><a class="dropdown-item" href="javascript:void(0)" onclick="executeBatchAction('unlock_all')">Buka Kunci Semua Jadwal</a></li>
           <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="executeBatchAction('clear_unlocked')"><i class="bi bi-trash me-2"></i>Kosongkan Jadwal Yang Tidak Dikunci</a></li>
-          <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="executeBatchAction('clear_all')"><i class="bi bi-x-circle me-2"></i>Kosongkan Semua Jadwal (Reset Total)</a></li>
+          <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="executeBatchAction('clear_unlocked')">Kosongkan Jadwal Yang Tidak Dikunci</a></li>
+          <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="executeBatchAction('clear_all')">Kosongkan Semua Jadwal (Reset Total)</a></li>
         </ul>
       </div>
     </div>
@@ -53,7 +53,7 @@
 <!-- Conflict Alert Banner (if clashes exist) -->
 {% if conflict_data.total_conflicts > 0 %}
   <div class="alert alert-danger mb-4 p-3">
-    <div class="fw-bold mb-2"><i class="bi bi-exclamation-octagon-fill me-2"></i>Ditemukan Bentrok Jadwal Pada Sistem:</div>
+    <div class="fw-bold mb-2">Ditemukan Bentrok Jadwal Pada Sistem:</div>
     <ul class="mb-0 small ps-3">
       {% for c in conflict_data.lecturer_conflicts %}
         <li class="mb-1">
@@ -89,7 +89,6 @@
 <div class="card">
   <div class="card-header bg-white d-flex justify-content-between align-items-center">
     <span class="fw-bold">
-      <i class="bi bi-calendar3 text-primary me-2"></i>
       Matriks Jadwal: Hari Ke-{{ selected_day }} ({% for card in day_cards %}{% if card.day_num == selected_day %}{{ card.label }}{% endif %}{% endfor %})
     </span>
     <small class="text-muted">Klik pada kartu untuk ubah, kosongkan, atau kunci slot.</small>
@@ -130,10 +129,10 @@
                       </span>
                       <div class="d-flex gap-1">
                         {% if cell.student.is_locked %}
-                          <span class="text-warning" title="Terkunci"><i class="bi bi-lock-fill"></i></span>
+                          <span class="text-warning" title="Terkunci"></span>
                         {% endif %}
                         {% if cell.is_clash %}
-                          <span class="text-danger" title="Bentrok Terdeteksi!"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                          <span class="text-danger" title="Bentrok Terdeteksi!"></span>
                         {% endif %}
                       </div>
                     </div>
@@ -149,11 +148,11 @@
                     <!-- Cell Actions -->
                     <div class="mt-2 pt-1 d-flex justify-content-between align-items-center">
                       <button class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size: 0.7rem;" onclick="openAssignModal({{ selected_day }}, {{ cell.slot_num }}, {{ cell.room_num }}, {{ cell.student.id }}, '{{ cell.student.nim|escapejs }}', '{{ cell.student.nama|escapejs }}', {{ cell.student.is_locked|lower }})">
-                        <i class="bi bi-arrow-left-right"></i> Pindah
+                        Pindah
                       </button>
 
                       <button class="btn btn-outline-danger btn-sm py-0 px-1" style="font-size: 0.7rem;" onclick="clearSlot({{ cell.student.id }})" title="Kosongkan Slot">
-                        <i class="bi bi-trash"></i> Kosongkan
+                        Kosongkan
                       </button>
                     </div>
                   </div>
@@ -169,7 +168,7 @@
                   <div class="p-3 text-center border border-dashed rounded text-muted h-100 d-flex flex-column justify-content-center align-items-center" style="min-height: 110px; background-color: #fafafa;">
                     <small class="text-secondary mb-2" style="font-size: 0.75rem;">Slot Kosong</small>
                     <button class="btn btn-outline-primary btn-sm py-1 px-2" style="font-size: 0.72rem;" onclick="openAssignModal({{ selected_day }}, {{ cell.slot_num }}, {{ cell.room_num }}, null, '', '', false)">
-                      <i class="bi bi-plus-lg"></i> Isi Mahasiswa
+                      Isi Mahasiswa
                     </button>
                   </div>
                 {% endif %}
@@ -212,7 +211,7 @@
         <div class="form-check mb-2">
           <input class="form-check-input" type="checkbox" id="modal_is_locked" checked>
           <label class="form-check-label small fw-bold" for="modal_is_locked">
-            <i class="bi bi-lock-fill text-warning me-1"></i> Kunci Jadwal Ini (Locked)
+            Kunci Jadwal Ini (Locked)
           </label>
           <div class="form-text small">Jika dikunci, Algoritma Genetika tidak akan menggeser mahasiswa ini saat optimasi dijalankan.</div>
         </div>
@@ -230,7 +229,7 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h6 class="modal-title fw-bold"><i class="bi bi-person-x me-2 text-danger"></i>Mahasiswa Belum Terjadwal (Slot Kosong)</h6>
+        <h6 class="modal-title fw-bold">Mahasiswa Belum Terjadwal (Slot Kosong)</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body p-0">
@@ -273,7 +272,6 @@
           </div>
         {% else %}
           <div class="text-center py-5 text-muted">
-            <i class="bi bi-check-circle-fill text-success fs-1"></i>
             <h6 class="mt-2 fw-bold text-success">Semua Mahasiswa Sudah Memiliki Jadwal!</h6>
             <p class="small">Tidak ada mahasiswa dengan slot kosong.</p>
           </div>

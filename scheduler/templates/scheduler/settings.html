@@ -11,7 +11,7 @@
     <div class="col-lg-8">
       <div class="card mb-4">
         <div class="card-header bg-white">
-          <h6 class="mb-0 fw-bold"><i class="bi bi-sliders text-primary me-2"></i>Pengaturan Alokasi Waktu & Ketersediaan Ruangan</h6>
+          <h6 class="mb-0 fw-bold">Pengaturan Alokasi Waktu & Ketersediaan Ruangan</h6>
         </div>
         <div class="card-body p-4">
           <div class="row g-3 mb-3">
@@ -63,7 +63,7 @@
       <!-- Human Labeling Mapping (Senin-Jumat, Ruang Fisik) -->
       <div class="card mb-4">
         <div class="card-header bg-white">
-          <h6 class="mb-0 fw-bold"><i class="bi bi-tags text-success me-2"></i>Labeling Hari Nyata & Kode Ruangan Fisik (Untuk Ekspor)</h6>
+          <h6 class="mb-0 fw-bold">Labeling Hari Nyata & Kode Ruangan Fisik (Untuk Ekspor)</h6>
         </div>
         <div class="card-body p-4">
           <p class="text-muted small">
@@ -86,7 +86,7 @@
       <!-- Genetic Algorithm Parameters -->
       <div class="card mb-4">
         <div class="card-header bg-white">
-          <h6 class="mb-0 fw-bold"><i class="bi bi-cpu text-warning me-2"></i>Parameter Algoritma Genetika (GA)</h6>
+          <h6 class="mb-0 fw-bold">Parameter Algoritma Genetika (GA)</h6>
         </div>
         <div class="card-body p-4">
           <div class="row g-3">
@@ -116,7 +116,7 @@
 
       <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary px-4">
-          <i class="bi bi-check2-circle me-1"></i> Simpan Pengaturan
+          Simpan Pengaturan
         </button>
         <a href="{% url 'scheduler:dashboard' %}" class="btn btn-outline-secondary">Batal</a>
       </div>
@@ -126,7 +126,7 @@
     <div class="col-lg-4">
       <div class="card border-primary position-sticky" style="top: 80px;">
         <div class="card-header bg-primary text-white">
-          <h6 class="mb-0 fw-bold"><i class="bi bi-calculator me-2"></i>Kalkulator Kapasitas Slot</h6>
+          <h6 class="mb-0 fw-bold">Kalkulator Kapasitas Slot</h6>
         </div>
         <div class="card-body">
           <div class="d-flex justify-content-between mb-2">
@@ -151,12 +151,12 @@
           <div id="calc_status_box">
             {% if capacity_sufficient %}
               <div class="alert alert-success small mb-0">
-                <i class="bi bi-check-circle-fill me-1"></i> <strong>Kapasitas Cukup!</strong>
+                <strong>Kapasitas Cukup!</strong>
                 <div>Tersedia kelebihan {{ capacity_diff }} slot cadangan. Penjadwalan dapat berjalan lancar.</div>
               </div>
             {% else %}
               <div class="alert alert-danger small mb-0">
-                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Kapasitas Kurang!</strong>
+                <strong>Kapasitas Kurang!</strong>
                 <div>Kekurangan {{ capacity_diff|stringformat:"d"|slice:"1:" }} slot untuk seluruh mahasiswa. Harap tambah hari atau ruangan.</div>
               </div>
             {% endif %}
@@ -184,9 +184,9 @@
     const students = {{ student_count }};
     const box = document.getElementById('calc_status_box');
     if (total >= students) {
-      box.innerHTML = `<div class="alert alert-success small mb-0"><i class="bi bi-check-circle-fill me-1"></i> <strong>Kapasitas Cukup!</strong><div>Tersedia kelebihan ${total - students} slot cadangan.</div></div>`;
+      box.innerHTML = `<div class="alert alert-success small mb-0"><strong>Kapasitas Cukup!</strong><div>Tersedia kelebihan ${total - students} slot cadangan.</div></div>`;
     } else {
-      box.innerHTML = `<div class="alert alert-danger small mb-0"><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Kapasitas Kurang!</strong><div>Kekurangan ${students - total} slot. Harap tambah hari atau ruangan.</div></div>`;
+      box.innerHTML = `<div class="alert alert-danger small mb-0"><strong>Kapasitas Kurang!</strong><div>Kekurangan ${students - total} slot. Harap tambah hari atau ruangan.</div></div>`;
     }
   }
 </script>

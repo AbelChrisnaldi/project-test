@@ -9,7 +9,7 @@
   <div class="col-lg-5">
     <div class="card mb-4">
       <div class="card-header bg-white">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-cpu text-primary me-2"></i>Pengaturan Penjadwalan Otomatis</h6>
+        <h6 class="mb-0 fw-bold">Pengaturan Penjadwalan Otomatis</h6>
       </div>
       <div class="card-body p-4">
         <div class="mb-3">
@@ -36,7 +36,7 @@
 
         {% if not capacity_ok %}
           <div class="alert alert-danger small mb-3">
-            <i class="bi bi-exclamation-triangle-fill me-1"></i> Kapasitas slot ({{ capacity }}) kurang dari jumlah mahasiswa ({{ student_count }}). Silakan tambah jumlah hari atau ruangan pada <a href="{% url 'scheduler:settings' %}">Pengaturan</a>.
+            Kapasitas slot ({{ capacity }}) kurang dari jumlah mahasiswa ({{ student_count }}). Silakan tambah jumlah hari atau ruangan pada <a href="{% url 'scheduler:settings' %}">Pengaturan</a>.
           </div>
         {% endif %}
 
@@ -60,7 +60,7 @@
         </div>
 
         <button id="btn_run_ga" class="btn btn-primary btn-lg w-100 py-3 fw-bold" onclick="runGeneticAlgorithm()" {% if not capacity_ok or student_count == 0 %}disabled{% endif %}>
-          <i class="bi bi-play-circle-fill me-2 fs-5"></i> Mulai Optimasi GA
+          Mulai Optimasi GA
         </button>
       </div>
     </div>
@@ -69,7 +69,7 @@
     {% if logs %}
       <div class="card">
         <div class="card-header bg-white">
-          <h6 class="mb-0 fw-bold small text-secondary"><i class="bi bi-clock-history me-1"></i>Riwayat Eksekusi GA</h6>
+          <h6 class="mb-0 fw-bold small text-secondary">Riwayat Eksekusi GA</h6>
         </div>
         <div class="card-body p-2">
           <ul class="list-group list-group-flush small">
@@ -96,7 +96,7 @@
   <div class="col-lg-7">
     <div class="card">
       <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-graph-up text-success me-2"></i>Hasil Optimasi & Progress Real-time</h6>
+        <h6 class="mb-0 fw-bold">Hasil Optimasi & Progress Real-time</h6>
         <span id="ga_status_badge" class="badge bg-secondary">Menunggu Eksekusi</span>
       </div>
       <div class="card-body p-4">
@@ -138,14 +138,14 @@
 
         <!-- Action Links upon completion -->
         <div id="success_action_box" class="alert alert-success p-3 mb-4" style="display: none;">
-          <h6 class="fw-bold mb-1"><i class="bi bi-check-circle-fill me-2"></i>Penjadwalan Berhasil Diterapkan ke Sistem!</h6>
+          <h6 class="fw-bold mb-1">Penjadwalan Berhasil Diterapkan ke Sistem!</h6>
           <p class="small text-muted mb-3" id="success_msg_text">Hasil telah disimpan ke seluruh mahasiswa tanpa ada jadwal yang bentrok.</p>
           <div class="d-flex gap-2">
             <a href="{% url 'scheduler:manual_grid' %}" class="btn btn-outline-success btn-sm">
-              <i class="bi bi-grid-3x3 me-1"></i> Buka Matriks Jadwal
+              Buka Matriks Jadwal
             </a>
             <a href="{% url 'scheduler:export_view' %}" class="btn btn-success btn-sm">
-              <i class="bi bi-download me-1"></i> Unduh File Excel Hasil
+              Unduh File Excel Hasil
             </a>
           </div>
         </div>
@@ -265,7 +265,7 @@
       alert("Error: " + err.message);
     } finally {
       btn.disabled = false;
-      btn.innerHTML = `<i class="bi bi-play-circle-fill me-2 fs-5"></i> Jalankan Ulang GA`;
+      btn.innerHTML = `Jalankan Ulang GA`;
     }
   }
 </script>

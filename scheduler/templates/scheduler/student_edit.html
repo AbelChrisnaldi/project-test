@@ -8,7 +8,7 @@
   <div class="col-lg-9">
     <div class="card">
       <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-person-gear text-primary me-2"></i>Edit Data & Alokasi Slot: {{ student.nim }} - {{ student.nama }}</h6>
+        <h6 class="mb-0 fw-bold">Edit Data & Alokasi Slot: {{ student.nim }} - {{ student.nama }}</h6>
         <a href="{% url 'scheduler:student_list' %}" class="btn btn-outline-secondary btn-sm">&larr; Kembali</a>
       </div>
       <div class="card-body p-4">
@@ -65,7 +65,7 @@
 
           <div class="p-3 bg-light rounded border mb-4">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="fw-bold text-dark mb-0"><i class="bi bi-calendar-check text-success me-2"></i>Penyesuaian Jadwal Sidang (Hari & Ruangan Bisa Kosong)</h6>
+              <h6 class="fw-bold text-dark mb-0">Penyesuaian Jadwal Sidang (Hari & Ruangan Bisa Kosong)</h6>
               <span id="badge_status_header" class="badge bg-secondary">Status: Kosong</span>
             </div>
             <p class="text-muted small mb-3">
@@ -118,7 +118,7 @@
             <div class="form-check mt-3">
               <input class="form-check-input" type="checkbox" name="is_locked" id="id_is_locked" {% if student.is_locked %}checked{% endif %}>
               <label class="form-check-label small fw-bold text-dark" for="id_is_locked">
-                <i class="bi bi-lock-fill text-warning me-1"></i> Kunci Jadwal Ini (Locked)
+                Kunci Jadwal Ini (Locked)
               </label>
               <div class="form-text small">Jika dicentang, Algoritma Genetika tidak akan mengubah slot mahasiswa ini saat optimasi dijalankan.</div>
             </div>
@@ -126,14 +126,14 @@
 
           <div class="d-flex justify-content-between">
             <button type="submit" class="btn btn-primary px-4">
-              <i class="bi bi-save me-1"></i> Simpan Perubahan
+              Simpan Perubahan
             </button>
             <div class="d-flex gap-2">
               <a href="{% url 'scheduler:student_clear_slot' student.id %}" class="btn btn-outline-warning" onclick="return confirm('Kosongkan slot mahasiswa ini?')">
-                <i class="bi bi-dash-circle me-1"></i> Kosongkan Slot Jadwal
+                Kosongkan Slot Jadwal
               </a>
               <a href="{% url 'scheduler:student_delete' student.id %}" class="btn btn-outline-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data mahasiswa {{ student.nim }} ({{ student.nama }}) secara permanen?')">
-                <i class="bi bi-trash me-1"></i> Hapus Mahasiswa
+                Hapus Mahasiswa
               </a>
             </div>
           </div>
@@ -175,7 +175,6 @@
       statusBox.className = 'mt-3 p-3 rounded small border bg-white text-muted';
       statusBox.innerHTML = `
         <div class="d-flex align-items-center text-secondary">
-          <i class="bi bi-dash-circle fs-5 me-2 text-muted"></i>
           <div>
             <strong>Status Slot: Kosong / Belum Dipilih Lengkap</strong>
             <div>Pilih Hari, Sesi, dan Ruangan di atas untuk melihat apakah slot tersebut kosong atau sudah terisi.</div>
@@ -214,7 +213,6 @@
 
       statusBox.innerHTML = `
         <div class="d-flex align-items-start">
-          <i class="bi bi-x-octagon-fill fs-4 me-2 text-danger"></i>
           <div>
             <div class="fw-bold">PERINGATAN: Ruangan Sudah Terisi & Dosen Bentrok!</div>
             <div class="mt-1">1. Ruangan ini <b>SUDAH TERISI</b> oleh: <strong>${isRoomOccupied.nim} - ${isRoomOccupied.nama}</strong>.</div>
@@ -230,7 +228,6 @@
       statusBox.className = 'mt-3 p-3 rounded small border border-danger bg-danger bg-opacity-10 text-danger';
       statusBox.innerHTML = `
         <div class="d-flex align-items-center">
-          <i class="bi bi-door-closed-fill fs-4 me-2 text-danger"></i>
           <div>
             <div class="fw-bold">SLOT TERISI: Ruangan ini sudah dipakai oleh mahasiswa lain!</div>
             <div>Mahasiswa penghuni: <strong>${isRoomOccupied.nim} - ${isRoomOccupied.nama}</strong> (${isRoomOccupied.prodi}).</div>
@@ -249,7 +246,6 @@
 
       statusBox.innerHTML = `
         <div class="d-flex align-items-start">
-          <i class="bi bi-exclamation-triangle-fill fs-4 me-2 text-warning"></i>
           <div>
             <div class="fw-bold text-danger">BENTROK DOSEN: Dosen terdaftar di ruangan lain pada jam yang sama!</div>
             <div class="mt-1">${clashText}</div>
@@ -265,7 +261,6 @@
       statusBox.className = 'mt-3 p-3 rounded small border border-success bg-success bg-opacity-10 text-success';
       statusBox.innerHTML = `
         <div class="d-flex align-items-center">
-          <i class="bi bi-check-circle-fill fs-4 me-2 text-success"></i>
           <div>
             <div class="fw-bold">SLOT TERSEDIA (KOSONG)!</div>
             <div>Ruangan ini belum ada penghuni, dan tidak ada dosen pembimbing/penguji yang bentrok di sesi jam ini.</div>

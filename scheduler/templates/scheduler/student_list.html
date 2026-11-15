@@ -10,7 +10,7 @@
     <form method="GET" class="row g-2 align-items-center">
       <div class="col-md-3">
         <div class="input-group">
-          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+          <span class="input-group-text bg-white"></span>
           <input type="text" name="q" class="form-control" placeholder="Cari NIM, Nama, Dosen..." value="{{ query }}">
         </div>
       </div>
@@ -43,9 +43,9 @@
       </div>
 
       <div class="col-md-2 d-flex gap-2">
-        <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-funnel me-1"></i> Filter</button>
+        <button type="submit" class="btn btn-primary flex-fill">Filter</button>
         {% if query or status_filter != 'all' or prodi_filter != 'all' or limit != '50' %}
-          <a href="{% url 'scheduler:student_list' %}" class="btn btn-outline-secondary" title="Reset filter"><i class="bi bi-x-circle"></i></a>
+          <a href="{% url 'scheduler:student_list' %}" class="btn btn-outline-secondary" title="Reset filter"></a>
         {% endif %}
       </div>
     </form>
@@ -60,10 +60,10 @@
     </div>
     <div class="d-flex gap-2">
       <a href="{% url 'scheduler:manual_grid' %}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-grid-3x3 me-1"></i> Editor Matriks Manual
+        Editor Matriks Manual
       </a>
       <a href="{% url 'scheduler:genetic' %}" class="btn btn-primary btn-sm">
-        <i class="bi bi-cpu me-1"></i> Jadwalkan Otomatis (GA)
+        Jadwalkan Otomatis (GA)
       </a>
     </div>
   </div>
@@ -117,47 +117,42 @@
             <td>
               {% if s.is_scheduled %}
                 <div><strong class="text-primary">{{ s.get_day_display_name }}</strong></div>
-                <div class="text-dark small"><i class="bi bi-clock me-1"></i>{{ s.get_time_display_name }}</div>
-                <div class="text-secondary small"><i class="bi bi-door-open me-1"></i>{{ s.get_room_display_name }}</div>
+                <div class="text-dark small">{{ s.get_time_display_name }}</div>
+                <div class="text-secondary small">{{ s.get_room_display_name }}</div>
                 {% if s.is_manual %}
                   <span class="badge bg-info text-dark" style="font-size: 0.65rem;">Manual</span>
                 {% endif %}
               {% else %}
                 <span class="badge badge-soft-danger px-2 py-1">
-                  <i class="bi bi-dash-circle me-1"></i> Kosong / Belum Terjadwal
+                  Kosong / Belum Terjadwal
                 </span>
               {% endif %}
             </td>
             <td>
               {% if s.is_locked %}
-                <span class="badge bg-warning text-dark"><i class="bi bi-lock-fill me-1"></i> Terkunci</span>
+                <span class="badge bg-warning text-dark">Terkunci</span>
               {% else %}
-                <span class="badge bg-light text-muted border"><i class="bi bi-unlock me-1"></i> Bebas (GA)</span>
+                <span class="badge bg-light text-muted border">Bebas (GA)</span>
               {% endif %}
             </td>
             <td class="text-end">
               <div class="btn-group btn-group-sm">
                 <a href="{% url 'scheduler:student_edit' s.id %}" class="btn btn-outline-primary" title="Ubah Info / Jadwal Manual">
-                  <i class="bi bi-pencil-square"></i>
-                </a>
+                  </a>
                 <a href="{% url 'scheduler:student_toggle_lock' s.id %}" class="btn btn-outline-warning" title="{% if s.is_locked %}Buka Kunci{% else %}Kunci Jadwal{% endif %}">
-                  <i class="bi bi-{% if s.is_locked %}unlock{% else %}lock{% endif %}"></i>
-                </a>
+                  </a>
                 {% if s.is_scheduled %}
                   <a href="{% url 'scheduler:student_clear_slot' s.id %}" class="btn btn-outline-secondary" title="Kosongkan Slot Jadwal" onclick="return confirm('Kosongkan slot mahasiswa {{ s.nim }}?')">
-                    <i class="bi bi-dash-circle"></i>
-                  </a>
+                    </a>
                 {% endif %}
                 <a href="{% url 'scheduler:student_delete' s.id %}" class="btn btn-outline-danger" title="Hapus Mahasiswa Permanen" onclick="return confirm('Apakah Anda yakin ingin menghapus data mahasiswa {{ s.nim }} ({{ s.nama }}) secara permanen?')">
-                  <i class="bi bi-trash"></i>
-                </a>
+                  </a>
               </div>
             </td>
           </tr>
         {% empty %}
           <tr>
             <td colspan="8" class="text-center py-5 text-muted">
-              <i class="bi bi-inbox fs-1 d-block mb-2"></i>
               Tidak ada data mahasiswa ditemukan.
               <div class="mt-2">
                 <a href="{% url 'scheduler:import_excel' %}" class="btn btn-primary btn-sm">Impor Berkas Excel</a>
