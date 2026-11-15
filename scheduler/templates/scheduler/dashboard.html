@@ -79,24 +79,15 @@
 <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 50%, #ffffff 100%); border-left: 5px solid #10b981 !important;">
   <div class="card-body p-4">
     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-      <div class="d-flex align-items-center gap-3">
-        <div class="bg-success text-white rounded-3 p-3 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 52px; height: 52px;">
-          <i class="bi bi-file-earmark-excel-fill fs-3"></i>
-        </div>
-        <div>
-          <div class="d-flex align-items-center gap-2 mb-1">
-            <h6 class="mb-0 fw-bold text-dark fs-6">Template Berkas Data Sidang (.xlsx)</h6>
-            <span class="badge bg-success text-white rounded-pill px-2 py-0 fw-semibold" style="font-size: 0.72rem;">Format Resmi</span>
-          </div>
-          <p class="text-secondary small mb-0">
-            Unduh format template Excel resmi (sudah dilengkapi 1 contoh data pengisian) sebelum memulai langkah impor agar data peserta dan dosen terbaca tepat tanpa kendala.
-          </p>
-        </div>
+      <div>
+        <h6 class="mb-1 fw-bold text-dark fs-6">Template Berkas Data Sidang (.xlsx)</h6>
+        <p class="text-secondary small mb-0">
+          Unduh format template Excel resmi (sudah dilengkapi 1 contoh data pengisian) sebelum memulai langkah impor agar data peserta dan dosen terbaca tepat tanpa kendala.
+        </p>
       </div>
       <div class="d-flex align-items-center gap-2 flex-shrink-0">
-        <a href="{% url 'scheduler:download_template' %}" class="btn btn-success fw-semibold px-4 py-2 shadow-sm d-flex align-items-center gap-2">
-          <i class="bi bi-file-earmark-arrow-down-fill fs-5"></i>
-          <span>Unduh Template Excel</span>
+        <a href="{% url 'scheduler:download_template' %}" class="btn btn-success fw-semibold px-4 py-2 shadow-sm">
+          Unduh Template Excel
         </a>
       </div>
     </div>
@@ -134,14 +125,9 @@
               Unggah berkas Excel data peserta sidang beserta dosen pembimbing & penguji.
             </p>
           </div>
-          <div class="d-flex flex-column gap-1">
-            <a href="{% url 'scheduler:import_excel' %}" class="btn btn-outline-dark btn-sm w-100 fw-medium">
-              <i class="bi bi-upload me-1"></i> Unggah Berkas
-            </a>
-            <a href="{% url 'scheduler:download_template' %}" class="btn btn-link btn-sm text-decoration-none text-success p-0 fw-medium" style="font-size: 0.75rem;">
-              <i class="bi bi-file-earmark-arrow-down me-1"></i> Unduh Template
-            </a>
-          </div>
+          <a href="{% url 'scheduler:import_excel' %}" class="btn btn-outline-dark btn-sm w-100 fw-medium">
+            <i class="bi bi-upload me-1"></i> Unggah Berkas
+          </a>
         </div>
       </div>
 
