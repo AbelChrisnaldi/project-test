@@ -10,7 +10,7 @@
     <form method="GET" class="row g-2 align-items-center">
       <div class="col-md-3">
         <div class="input-group">
-          <span class="input-group-text bg-white"></span>
+          <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
           <input type="text" name="q" class="form-control" placeholder="Cari NIM, Nama, Dosen..." value="{{ query }}">
         </div>
       </div>
@@ -45,7 +45,7 @@
       <div class="col-md-2 d-flex gap-2">
         <button type="submit" class="btn btn-primary flex-fill">Filter</button>
         {% if query or status_filter != 'all' or prodi_filter != 'all' or limit != '50' %}
-          <a href="{% url 'scheduler:student_list' %}" class="btn btn-outline-secondary" title="Reset filter"></a>
+          <a href="{% url 'scheduler:student_list' %}" class="btn btn-outline-secondary" title="Reset filter"><i class="bi bi-x-lg"></i></a>
         {% endif %}
       </div>
     </form>
@@ -137,16 +137,24 @@
             </td>
             <td class="text-end">
               <div class="btn-group btn-group-sm">
-                <a href="{% url 'scheduler:student_edit' s.id %}" class="btn btn-outline-primary" title="Ubah Info / Jadwal Manual">
-                  </a>
-                <a href="{% url 'scheduler:student_toggle_lock' s.id %}" class="btn btn-outline-warning" title="{% if s.is_locked %}Buka Kunci{% else %}Kunci Jadwal{% endif %}">
-                  </a>
+                <a href="{% url 'scheduler:student_edit' s.id %}" class="btn btn-outline-primary" title="Ubah Info / Penjadwalan Manual">
+                  <i class="bi bi-pencil-square"></i>
+                </a>
+                <a href="{% url 'scheduler:student_toggle_lock' s.id %}" class="btn btn-outline-warning" title="{% if s.is_locked %}Buka Kunci Jadwal{% else %}Kunci Jadwal Ini{% endif %}">
+                  {% if s.is_locked %}
+                    <i class="bi bi-lock-fill"></i>
+                  {% else %}
+                    <i class="bi bi-unlock"></i>
+                  {% endif %}
+                </a>
                 {% if s.is_scheduled %}
                   <a href="{% url 'scheduler:student_clear_slot' s.id %}" class="btn btn-outline-secondary" title="Kosongkan Slot Jadwal" onclick="return confirm('Kosongkan slot mahasiswa {{ s.nim }}?')">
-                    </a>
+                    <i class="bi bi-calendar-x"></i>
+                  </a>
                 {% endif %}
                 <a href="{% url 'scheduler:student_delete' s.id %}" class="btn btn-outline-danger" title="Hapus Mahasiswa Permanen" onclick="return confirm('Apakah Anda yakin ingin menghapus data mahasiswa {{ s.nim }} ({{ s.nama }}) secara permanen?')">
-                  </a>
+                  <i class="bi bi-trash3"></i>
+                </a>
               </div>
             </td>
           </tr>
