@@ -83,32 +83,40 @@
         </div>
       </div>
 
-      <!-- Genetic Algorithm Parameters -->
-      <div class="card mb-4">
-        <div class="card-header bg-white">
-          <h6 class="mb-0 fw-bold">Parameter Algoritma Genetika (GA)</h6>
+      <!-- Genetic Algorithm Parameters (Tersembunyi ke Menu Lanjutan) -->
+      <div class="card mb-4 border">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="mb-0 fw-bold">Pengaturan Lanjutan: Parameter Algoritma Genetika</h6>
+            <small class="text-muted">Opsional &mdash; Nilai default sudah diuji optimal, tidak perlu diubah kecuali untuk riset komputasi.</small>
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSettingsGA">
+            Tampilkan Parameter &darr;
+          </button>
         </div>
-        <div class="card-body p-4">
-          <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label small fw-bold">Ukuran Populasi</label>
-              <input type="number" name="population_size" class="form-control form-control-sm" value="{{ session.population_size }}" min="10" max="200">
-              <div class="form-text small">Default: 40 - 60</div>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small fw-bold">Maksimum Generasi</label>
-              <input type="number" name="max_generations" class="form-control form-control-sm" value="{{ session.max_generations }}" min="10" max="500">
-              <div class="form-text small">Default: 80 - 150</div>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small fw-bold">Probabilitas Crossover</label>
-              <input type="number" step="0.05" name="crossover_rate" class="form-control form-control-sm" value="{{ session.crossover_rate }}" min="0.1" max="1.0">
-              <div class="form-text small">Default: 0.80</div>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small fw-bold">Probabilitas Mutasi</label>
-              <input type="number" step="0.05" name="mutation_rate" class="form-control form-control-sm" value="{{ session.mutation_rate }}" min="0.05" max="1.0">
-              <div class="form-text small">Default: 0.30</div>
+        <div class="collapse" id="collapseSettingsGA">
+          <div class="card-body p-4 bg-light bg-opacity-50 border-top">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Ukuran Populasi</label>
+                <input type="number" name="population_size" class="form-control form-control-sm" value="{{ session.population_size }}" min="10" max="200">
+                <div class="form-text small">Default: 40 - 60</div>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Maksimum Generasi</label>
+                <input type="number" name="max_generations" class="form-control form-control-sm" value="{{ session.max_generations }}" min="10" max="500">
+                <div class="form-text small">Default: 80 - 150</div>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Probabilitas Crossover</label>
+                <input type="number" step="0.05" name="crossover_rate" class="form-control form-control-sm" value="{{ session.crossover_rate }}" min="0.1" max="1.0">
+                <div class="form-text small">Default: 0.80</div>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Probabilitas Mutasi</label>
+                <input type="number" step="0.05" name="mutation_rate" class="form-control form-control-sm" value="{{ session.mutation_rate }}" min="0.05" max="1.0">
+                <div class="form-text small">Default: 0.30</div>
+              </div>
             </div>
           </div>
         </div>
@@ -179,7 +187,7 @@
     document.getElementById('span_sessions').textContent = sessions;
     const total = days * sessions * rooms;
     document.getElementById('calc_total_slots').textContent = total;
-    document.getElementById('calc_breakdown').textContent = `${days} Hari Ã— ${sessions} Sesi Ã— ${rooms} Ruang`;
+    document.getElementById('calc_breakdown').textContent = `${days} Hari ÃƒÆ’Ã¢â‚¬â€ ${sessions} Sesi ÃƒÆ’Ã¢â‚¬â€ ${rooms} Ruang`;
 
     const students = {{ student_count }};
     const box = document.getElementById('calc_status_box');

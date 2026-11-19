@@ -1,160 +1,203 @@
 {% extends 'scheduler/base.html' %}
 
-{% block title %}Penjadwalan Otomatis (Algoritma Genetika){% endblock %}
-{% block header_title %}Langkah 3: Penjadwalan Otomatis (Algoritma Genetika){% endblock %}
+{% block title %}Penjadwalan Otomatis Sidang TA{% endblock %}
+{% block header_title %}Langkah 3: Penjadwalan Otomatis{% endblock %}
 
 {% block content %}
-<div class="row g-4">
-  <!-- Left Column: Controls & Execution Card -->
-  <div class="col-lg-5">
-    <div class="card mb-4">
-      <div class="card-header bg-white">
-        <h6 class="mb-0 fw-bold">Pengaturan Penjadwalan Otomatis</h6>
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="card mb-4 shadow-sm border-0">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="mb-0 fw-bold text-dark">Penjadwalan Otomatis Sidang</h5>
+          <small class="text-muted">Susun kombinasi jadwal seluruh peserta secara otomatis tanpa bentrok dosen pembimbing maupun penguji.</small>
+        </div>
+        <span id="ga_status_badge" class="badge bg-secondary px-3 py-2 fw-semibold">Siap Dijadwalkan</span>
       </div>
+
       <div class="card-body p-4">
-        <div class="mb-3">
-          <label class="form-label small fw-bold text-muted">Status Data Saat Ini</label>
-          <div class="p-3 bg-light rounded border">
-            <div class="d-flex justify-content-between mb-1 small">
-              <span>Total Mahasiswa:</span>
-              <strong class="text-dark">{{ student_count }}</strong>
+        <!-- Status Kesiapan Singkat -->
+        <div class="row g-3 mb-4 text-center">
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-center">
+              <span class="text-muted small fw-medium">Peserta Siap Dijadwalkan</span>
+              <h3 class="fw-bold mb-0 text-dark">{{ unlocked_count }}</h3>
+              <small class="text-muted">Dari total {{ student_count }} mahasiswa</small>
             </div>
-            <div class="d-flex justify-content-between mb-1 small">
-              <span>Jadwal Terkunci (Manual):</span>
-              <span class="badge bg-warning text-dark">{{ locked_count }} Terkunci</span>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-center">
+              <span class="text-muted small fw-medium">Kapasitas Slot Sidang</span>
+              <h3 class="fw-bold mb-0 {% if capacity_ok %}text-success{% else %}text-danger{% endif %}">{{ capacity }}</h3>
+              <small class="{% if capacity_ok %}text-success fw-medium{% else %}text-danger fw-medium{% endif %}">
+                {% if capacity_ok %}Kapasitas Tersedia (Cukup){% else %}Kapasitas Kurang!{% endif %}
+              </small>
             </div>
-            <div class="d-flex justify-content-between mb-1 small">
-              <span>Akan Dioptimasi oleh GA:</span>
-              <strong class="text-primary">{{ unlocked_count }} Mahasiswa</strong>
-            </div>
-            <div class="d-flex justify-content-between small">
-              <span>Total Kapasitas Tersedia:</span>
-              <strong class="{% if capacity_ok %}text-success{% else %}text-danger{% endif %}">{{ capacity }} Slot</strong>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-center">
+              <span class="text-muted small fw-medium">Jadwal Dikunci Manual</span>
+              <h3 class="fw-bold mb-0 text-secondary">{{ locked_count }}</h3>
+              <small class="text-muted">Posisi slot dipertahankan</small>
             </div>
           </div>
         </div>
 
         {% if not capacity_ok %}
-          <div class="alert alert-danger small mb-3">
-            Kapasitas slot ({{ capacity }}) kurang dari jumlah mahasiswa ({{ student_count }}). Silakan tambah jumlah hari atau ruangan pada <a href="{% url 'scheduler:settings' %}">Pengaturan</a>.
+          <div class="alert alert-danger small mb-4">
+            Kapasitas slot ({{ capacity }}) kurang dari jumlah mahasiswa ({{ student_count }}). Silakan sesuaikan jumlah hari atau ruangan pada <a href="{% url 'scheduler:settings' %}" class="fw-bold alert-link">Pengaturan Waktu & Ruangan</a>.
           </div>
         {% endif %}
 
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <label class="form-label small fw-bold">Ukuran Populasi</label>
-            <input type="number" id="ga_pop_size" class="form-control form-control-sm" value="{{ session.population_size }}">
+        <!-- Tombol Aksi Utama & Pengaturan Lanjutan -->
+        <div class="p-4 rounded border bg-light bg-opacity-50 text-center mb-3">
+          <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center gap-3">
+            <button id="btn_run_ga" class="btn btn-primary btn-lg px-4 py-3 fw-bold shadow-sm" onclick="runGeneticAlgorithm()" {% if not capacity_ok or student_count == 0 %}disabled{% endif %}>
+              Mulai Jadwal Otomatis
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-lg px-3 py-3 fw-medium" data-bs-toggle="modal" data-bs-target="#modalAdvancedParams">
+              Konfigurasi Parameter
+            </button>
           </div>
-          <div class="col-6">
-            <label class="form-label small fw-bold">Maksimum Generasi</label>
-            <input type="number" id="ga_max_gen" class="form-control form-control-sm" value="{{ session.max_generations }}">
-          </div>
-          <div class="col-6">
-            <label class="form-label small fw-bold">Crossover Rate</label>
-            <input type="number" step="0.05" id="ga_cx_rate" class="form-control form-control-sm" value="{{ session.crossover_rate }}">
-          </div>
-          <div class="col-6">
-            <label class="form-label small fw-bold">Mutation Rate</label>
-            <input type="number" step="0.05" id="ga_mut_rate" class="form-control form-control-sm" value="{{ session.mutation_rate }}">
-          </div>
+          <small class="text-muted d-block mt-3">
+            Cukup klik <strong>Mulai Jadwal Otomatis</strong> untuk menyusun jadwal optimal. Parameter algoritma genetika sudah diatur secara default di balik layar.
+          </small>
         </div>
 
-        <button id="btn_run_ga" class="btn btn-primary btn-lg w-100 py-3 fw-bold" onclick="runGeneticAlgorithm()" {% if not capacity_ok or student_count == 0 %}disabled{% endif %}>
-          Mulai Optimasi GA
-        </button>
-      </div>
-    </div>
-
-    <!-- History Logs -->
-    {% if logs %}
-      <div class="card">
-        <div class="card-header bg-white">
-          <h6 class="mb-0 fw-bold small text-secondary">Riwayat Eksekusi GA</h6>
-        </div>
-        <div class="card-body p-2">
-          <ul class="list-group list-group-flush small">
-            {% for log in logs %}
-              <li class="list-group-item px-2 py-2">
-                <div class="d-flex justify-content-between">
-                  <strong>{{ log.timestamp|date:"d M H:i" }}</strong>
-                  <span class="badge {% if log.final_conflicts == 0 %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                    {{ log.final_conflicts }} Bentrok
-                  </span>
-                </div>
-                <div class="text-muted small mt-1">
-                  {{ log.generations_run }} generasi dalam {{ log.execution_time_seconds|floatformat:2 }}s (Fitness: {{ log.best_fitness|floatformat:4 }})
-                </div>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
-    {% endif %}
-  </div>
-
-  <!-- Right Column: Live Progress & Results -->
-  <div class="col-lg-7">
-    <div class="card">
-      <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold">Hasil Optimasi & Progress Real-time</h6>
-        <span id="ga_status_badge" class="badge bg-secondary">Menunggu Eksekusi</span>
-      </div>
-      <div class="card-body p-4">
-        <!-- Progress Bar -->
-        <div id="progress_wrapper" class="mb-4" style="display: none;">
-          <div class="d-flex justify-content-between small text-muted mb-1">
-            <span id="progress_text">Menjalankan Algoritma Genetika...</span>
-            <span id="progress_percent">0%</span>
+        <!-- Progress Bar (Animasi Saat Proses Berjalan) -->
+        <div id="progress_wrapper" class="mb-4 p-3 bg-light rounded border" style="display: none;">
+          <div class="d-flex justify-content-between small text-muted mb-2">
+            <span id="progress_text" class="fw-semibold text-primary">Sedang menyusun jadwal dan memeriksa bentrok...</span>
+            <span id="progress_percent" class="fw-bold">0%</span>
           </div>
           <div class="progress" style="height: 12px;">
             <div id="progress_bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
           </div>
         </div>
 
-        <!-- Result Stats Cards -->
-        <div id="result_stats" class="row g-3 mb-4" style="display: none;">
-          <div class="col-md-4">
-            <div class="p-3 bg-light rounded text-center border">
-              <span class="text-muted small">Bentrok Akhir</span>
-              <h3 id="stat_conflicts" class="fw-bold mb-0 text-success">0</h3>
-              <small id="stat_conflict_label" class="text-muted">Bebas bentrok</small>
+        <!-- Hasil Penjadwalan & Tombol Lihat Hasil -->
+        <div id="success_action_box" class="p-4 rounded border shadow-sm mb-4" style="display: none; background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); border-color: #10b981 !important;">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+            <div>
+              <h5 class="fw-bold text-success mb-1">Penjadwalan Berhasil Disusun!</h5>
+              <p class="small text-muted mb-0" id="success_msg_text">Hasil jadwal telah disimpan ke sistem tanpa ada bentrok dosen maupun ruangan.</p>
+            </div>
+            <div class="d-flex gap-2 flex-shrink-0">
+              <a href="{% url 'scheduler:manual_grid' %}" class="btn btn-outline-success fw-semibold">
+                Lihat Matriks Jadwal
+              </a>
+              <a href="{% url 'scheduler:export_view' %}" class="btn btn-success fw-semibold">
+                Unduh Hasil Excel
+              </a>
             </div>
           </div>
-          <div class="col-md-4">
-            <div class="p-3 bg-light rounded text-center border">
-              <span class="text-muted small">Waktu Komputasi</span>
-              <h3 id="stat_duration" class="fw-bold mb-0 text-primary">0s</h3>
-              <small id="stat_gens" class="text-muted">0 generasi</small>
+
+          <!-- Ringkasan Hasil Cepat -->
+          <div id="result_stats" class="row g-3 pt-3 border-top border-success border-opacity-25" style="display: none;">
+            <div class="col-md-4">
+              <div class="p-3 bg-white rounded text-center border">
+                <span class="text-muted small">Status Bentrok</span>
+                <h3 id="stat_conflicts" class="fw-bold mb-0 text-success">0</h3>
+                <small id="stat_conflict_label" class="text-success fw-semibold">Bebas bentrok!</small>
+              </div>
             </div>
-          </div>
-          <div class="col-md-4">
-            <div class="p-3 bg-light rounded text-center border">
-              <span class="text-muted small">Fitness Terbaik</span>
-              <h3 id="stat_fitness" class="fw-bold mb-0 text-dark">0.0</h3>
-              <small class="text-muted">Maks: ~1.00</small>
+            <div class="col-md-4">
+              <div class="p-3 bg-white rounded text-center border">
+                <span class="text-muted small">Waktu Pemrosesan</span>
+                <h3 id="stat_duration" class="fw-bold mb-0 text-primary">0s</h3>
+                <small id="stat_gens" class="text-muted">0 generasi</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-white rounded text-center border">
+                <span class="text-muted small">Tingkat Optimal (Fitness)</span>
+                <h3 id="stat_fitness" class="fw-bold mb-0 text-dark">0.0</h3>
+                <small class="text-muted">Maksimal: ~1.00</small>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Action Links upon completion -->
-        <div id="success_action_box" class="alert alert-success p-3 mb-4" style="display: none;">
-          <h6 class="fw-bold mb-1">Penjadwalan Berhasil Diterapkan ke Sistem!</h6>
-          <p class="small text-muted mb-3" id="success_msg_text">Hasil telah disimpan ke seluruh mahasiswa tanpa ada jadwal yang bentrok.</p>
-          <div class="d-flex gap-2">
-            <a href="{% url 'scheduler:manual_grid' %}" class="btn btn-outline-success btn-sm">
-              Buka Matriks Jadwal
-            </a>
-            <a href="{% url 'scheduler:export_view' %}" class="btn btn-success btn-sm">
-              Unduh File Excel Hasil
-            </a>
+        <!-- Footer: Sub-menu Pendukung & Log Teknis (Collapsible) -->
+        <div class="pt-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+          <a class="text-decoration-none text-secondary small fw-medium" data-bs-toggle="collapse" href="#collapseTechnicalDetails" role="button">
+            Pengaturan Pendukung & Riwayat Teknis &darr;
+          </a>
+          <a href="{% url 'scheduler:settings' %}" class="text-decoration-none small text-muted">
+            Atur Waktu & Ruangan Sidang &rarr;
+          </a>
+        </div>
+
+        <div class="collapse mt-3" id="collapseTechnicalDetails">
+          <div class="p-3 bg-light rounded border">
+            {% if logs %}
+              <h6 class="fw-bold small text-secondary mb-2">Riwayat Eksekusi Sebelumnya:</h6>
+              <ul class="list-group list-group-flush small mb-3">
+                {% for log in logs %}
+                  <li class="list-group-item bg-transparent px-0 py-1 d-flex justify-content-between align-items-center">
+                    <span><strong>{{ log.timestamp|date:"d M H:i" }}</strong> &mdash; {{ log.generations_run }} generasi dalam {{ log.execution_time_seconds|floatformat:2 }}s</span>
+                    <span class="badge {% if log.final_conflicts == 0 %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                      {{ log.final_conflicts }} Bentrok
+                    </span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            <h6 class="fw-bold small text-secondary mb-2">Log Komputasi Teknis:</h6>
+            <div id="ga_console_log" class="p-3 bg-dark text-light rounded font-monospace small" style="height: 180px; overflow-y: auto; font-size: 0.8rem;">
+              <span class="text-secondary">> Sistem siap. Klik tombol "Mulai Jadwal Otomatis" untuk mengeksekusi...</span>
+            </div>
           </div>
         </div>
 
-        <!-- Generation Console Log -->
-        <h6 class="fw-bold small text-secondary mb-2">Log Generasi Komputasi:</h6>
-        <div id="ga_console_log" class="p-3 bg-dark text-light rounded font-monospace small" style="height: 320px; overflow-y: auto; font-size: 0.82rem;">
-          <span class="text-secondary">> Sistem siap. Klik tombol "Mulai Optimasi GA" untuk mengeksekusi...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Konfigurasi Parameter Algoritma (Lanjutan) -->
+<div class="modal fade" id="modalAdvancedParams" tabindex="-1" aria-labelledby="modalAdvancedParamsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold" id="modalAdvancedParamsLabel">Konfigurasi Parameter Algoritma (Lanjutan)</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info small mb-3">
+          Nilai standar (default) telah dikalibrasi agar menghasilkan jadwal terbaik tanpa bentrok. Pengguna umum tidak perlu mengubah nilai ini kecuali ingin menyesuaikan kedalaman iterasi komputasi.
         </div>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label small fw-bold">Ukuran Populasi</label>
+            <input type="number" id="ga_pop_size" class="form-control" value="{{ session.population_size }}">
+            <div class="form-text small">Default: 50</div>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold">Maksimum Generasi</label>
+            <input type="number" id="ga_max_gen" class="form-control" value="{{ session.max_generations }}">
+            <div class="form-text small">Default: 100</div>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold">Probabilitas Crossover</label>
+            <input type="number" step="0.05" id="ga_cx_rate" class="form-control" value="{{ session.crossover_rate }}">
+            <div class="form-text small">Default: 0.80</div>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold">Probabilitas Mutasi</label>
+            <input type="number" step="0.05" id="ga_mut_rate" class="form-control" value="{{ session.mutation_rate }}">
+            <div class="form-text small">Default: 0.30</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetDefaultParams()">
+          Kembalikan Default
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">
+          Tutup & Terapkan
+        </button>
       </div>
     </div>
   </div>
@@ -163,8 +206,16 @@
 
 {% block extra_scripts %}
 <script>
+  function resetDefaultParams() {
+    document.getElementById('ga_pop_size').value = 50;
+    document.getElementById('ga_max_gen').value = 100;
+    document.getElementById('ga_cx_rate').value = 0.80;
+    document.getElementById('ga_mut_rate').value = 0.30;
+  }
+
   function logMessage(text, color = '#38bdf8') {
     const consoleDiv = document.getElementById('ga_console_log');
+    if (!consoleDiv) return;
     const p = document.createElement('div');
     p.style.color = color;
     p.textContent = text;
@@ -183,12 +234,12 @@
 
     // UI State Loading
     btn.disabled = true;
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Sedang Mengoptimasi...`;
-    badge.className = 'badge bg-primary';
-    badge.textContent = 'Memproses GA...';
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Sedang Menyusun Jadwal...`;
+    badge.className = 'badge bg-primary px-3 py-2 fw-semibold';
+    badge.textContent = 'Memproses Jadwal...';
     progressWrapper.style.display = 'block';
-    progressBar.style.width = '30%';
-    progressPercent.textContent = '30%';
+    progressBar.style.width = '35%';
+    progressPercent.textContent = '35%';
     resultStats.style.display = 'none';
     successBox.style.display = 'none';
 
@@ -204,8 +255,8 @@
     };
 
     try {
-      progressBar.style.width = '60%';
-      progressPercent.textContent = '60%';
+      progressBar.style.width = '70%';
+      progressPercent.textContent = '70%';
 
       const response = await fetch("{% url 'scheduler:api_run_ga' %}", {
         method: "POST",
@@ -222,23 +273,12 @@
       progressPercent.textContent = '100%';
 
       if (res.success) {
-        badge.className = 'badge bg-success';
-        badge.textContent = 'Optimasi Selesai';
+        badge.className = 'badge bg-success px-3 py-2 fw-semibold';
+        badge.textContent = 'Selesai (Bebas Bentrok)';
 
         logMessage(`> [GA Selesai] ${res.message}`, '#4ade80');
         logMessage(`> Bentrok Awal: ${res.initial_conflicts} -> Bentrok Akhir: ${res.final_conflicts}`, '#4ade80');
-        logMessage(`> Bentrok Ruang: ${res.room_conflicts} | Bentrok Dosen: ${res.lecturer_conflicts}`, '#4ade80');
         logMessage(`> Waktu Eksekusi: ${res.execution_time_seconds.toFixed(2)} detik (${res.generations_run} generasi)`, '#4ade80');
-
-        // History logs
-        if (res.history && res.history.length) {
-          logMessage(`--- Ringkasan Progres Generasi ---`, '#94a3b8');
-          res.history.forEach((h, i) => {
-            if (i % 10 === 0 || i === res.history.length - 1) {
-              logMessage(`  Gen ${h.generation}: Bentrok=${h.best_conflicts} (Dosen=${h.lecturer_conflicts}, Ruang=${h.room_conflicts}) | Fitness=${h.best_fitness}`, '#94a3b8');
-            }
-          });
-        }
 
         // Show result stats
         resultStats.style.display = 'flex';
@@ -253,19 +293,19 @@
         successBox.style.display = 'block';
         document.getElementById('success_msg_text').textContent = res.message;
       } else {
-        badge.className = 'badge bg-danger';
+        badge.className = 'badge bg-danger px-3 py-2 fw-semibold';
         badge.textContent = 'Gagal';
         logMessage(`> [Error] ${res.message}`, '#f87171');
-        alert("Gagal menjalankan GA: " + res.message);
+        alert("Gagal menjalankan penjadwalan otomatis: " + res.message);
       }
     } catch (err) {
-      badge.className = 'badge bg-danger';
+      badge.className = 'badge bg-danger px-3 py-2 fw-semibold';
       badge.textContent = 'Error';
       logMessage(`> [Exception] Terjadi kesalahan: ${err.message}`, '#f87171');
       alert("Error: " + err.message);
     } finally {
       btn.disabled = false;
-      btn.innerHTML = `Jalankan Ulang GA`;
+      btn.innerHTML = `Jalankan Ulang Jadwal Otomatis`;
     }
   }
 </script>
